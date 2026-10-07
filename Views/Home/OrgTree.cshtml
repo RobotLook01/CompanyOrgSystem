@@ -1,0 +1,71 @@
+﻿@model IEnumerable<CompanyOrgSystem.Models.OrgTreeResult>
+
+@{
+    ViewData["Title"] = "組織図ツリー表示";
+}
+
+<div class="container mt-4">
+    <div class="p-4 mb-4 bg-dark text-white rounded-3 shadow-sm">
+        <h2 class="fw-bold">🌳 企業組織図マスターツリー</h2>
+        <p class="m-0 fs-6 text-muted">データベース（ぽすぐれ）の再帰クエリを用いて、現在の全階層構造をリアルタイムに自動追跡・視覚化しています。</p>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center my-3">
+        <h4 class="fw-bold text-secondary">📋 現在の組織階層一覧</h4>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary fw-bold">◀ メニューに戻る</a>
+    </div>
+
+    <!-- 🌳 ツリー形式のカードデザイン -->
+    <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-white fw-bold">
+            🏢 株式会社組織ネットワーク構造
+        </div>
+        <div class="card-body bg-light p-4">
+            <div class="list-group">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var org in Model)
+                    {
+                        // 階層の深さ（Level）に応じて、左側に空白（インデント）を自動計算して挟みます
+                        // Level 1: なし、Level 2: 2.5rem、Level 3: 5.0rem のように字下げします
+                        var paddingLeft = (org.Level - 1) * 2.5;
+
+                        <div class="list-group-item list-group-item-action d-flex align-items-center border-0 rounded my-1 shadow-sm bg-white"
+                             style="margin-left: @(paddingLeft)rem;">
+
+                            <!-- 階層に応じたアイコンの切り替え -->
+                            <span class="fs-4 me-2">
+                                @if (org.Level == 1)
+                                {
+                                    <text>🏢</text>
+                                }
+                                else if (org.Level == 2)
+                                {
+
+                                    <text>📁</text>
+                                }
+                                else
+                                {
+
+                                    <text>📄</text>
+                                }
+                            </span>
+
+                            <div>
+                                <span class="fw-bold fs-5 @(org.Level == 1 ? "text-danger" : org.Level == 2 ? "text-primary" : "text-dark")">
+                                    @org.DepartmentName
+                                </span>
+                                <span class="badge bg-secondary ms-2">階層レベル: @org.Level</span>
+                                <div class="small text-muted font-monospace mt-1">システム内部パス: @org.Path</div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">組織データが存在しません。</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
