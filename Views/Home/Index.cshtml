@@ -1,0 +1,58 @@
+﻿@{
+    ViewData["Title"] = "ポータルメニュー";
+}
+
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-dark text-white rounded-3 shadow text-center">
+        <h1 class="display-5 fw-bold">🏢 人事管理システム ポータル</h1>
+        <p class="fs-5 text-muted">利用目的に合わせてメニューを選択してください。</p>
+    </div>
+
+    <!-- ⚠️ パスワードエラー時のメッセージ表示 -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center shadow-sm" role="alert">
+            ❌ @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row g-4 justify-content-center mt-2">
+        <!-- 👥 一般ユーザー用カード -->
+        <div class="col-md-5">
+            <div class="card h-100 shadow border-primary text-center">
+                <div class="card-header bg-primary text-white fw-bold fs-5">👥 一般ユーザー用メニュー</div>
+                <div class="card-body d-flex flex-column justify-content-between p-4">
+                    <p class="card-text text-muted fs-6">
+                        社員名から主務・兼務の所属組織情報を検索・閲覧できます。<br>（認証は不要です）
+                    </p>
+                    <a asp-controller="Home" asp-action="GeneralSearch" class="btn btn-outline-primary btn-lg fw-bold w-100 mt-3 shadow-sm">
+                        一般検索画面を開く
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔒 管理者用カード（パスワード入力付き） -->
+        <div class="col-md-5">
+            <div class="card h-100 shadow border-danger">
+                <div class="card-header bg-danger text-white fw-bold fs-5 text-center">🔒 管理者用メニュー</div>
+                <div class="card-body p-4">
+                    <p class="card-text text-muted text-center fs-6">
+                        社員情報の検索に加え、機密情報の閲覧やマスターメンテナンス（今後の拡張）が可能です。
+                    </p>
+
+                    <!-- パスワード入力フォーム -->
+                    <form asp-controller="Home" asp-action="AdminLogin" method="post" class="mt-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">管理者パスワード</label>
+                            <input type="password" name="password" class="form-control" placeholder="パスワードを入力（初期: admin123）" required />
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-lg fw-bold w-100 shadow-sm">
+                            認証して管理画面を開く
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
