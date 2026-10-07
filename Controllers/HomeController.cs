@@ -9,6 +9,11 @@ namespace CompanyOrgSystem.Controllers
     {
         private readonly IConfiguration _configuration;
 
+        // 🏠メニューバー「Privacy」の処理
+        public IActionResult Privacy()
+        {
+            return View();
+        }
         public HomeController(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -51,24 +56,44 @@ namespace CompanyOrgSystem.Controllers
             var results = new List<EmployeeSearchResult>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
 
+            // 【対策1】null、空文字、前後の不要なスペースをすべて綺麗にして、確実に未入力判定する
+            string cleanKeyword = (keyword ?? "").Trim();
+            bool hasKeyword = !string.IsNullOrEmpty(cleanKeyword);
+
+            // SQLのベース部分
             string sql = @"
-                SELECT 
-                    e.employee_id, 
-                    e.employee_name, 
-                    d.department_name,
-                    CASE WHEN b.is_main_job = TRUE THEN '主務' ELSE '兼務' END AS division_type,
-                    e.email
-                FROM employees e
-                INNER JOIN belongs b ON e.employee_id = b.employee_id
-                INNER JOIN departments d ON b.department_id = d.department_id
-                WHERE e.employee_name LIKE @Keyword
-                ORDER BY e.employee_id, b.is_main_job DESC";
+        SELECT 
+            e.employee_id, 
+            e.employee_name, 
+            d.department_name,
+            CASE WHEN b.is_main_job = TRUE THEN '主務' ELSE '兼務' END AS division_type,
+            e.email
+        FROM employees e
+        INNER JOIN belongs b ON e.employee_id = b.employee_id
+        INNER JOIN departments d ON b.department_id = d.department_id";
+
+            if (hasKeyword)
+            {
+                // SQL文の中に直接 % を書かず、パラメータをそのまま結合する形にします
+                sql += " WHERE e.employee_name LIKE @Keyword";
+            }
+
+            sql += " ORDER BY e.employee_id, b.is_main_job DESC";
 
             using (var conn = new NpgsqlConnection(connectionString))
             {
                 using (var cmd = new NpgsqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@Keyword", $"%{keyword}%");
+                    if (hasKeyword)
+                    {
+                        // 【対策2】ユーザーが入力した「%」や「_」を通常の文字として検索できるようエスケープします
+                        // PostgreSQLのLIKE演算子で「%」自体を検索したい場合は「\%」にする必要があります
+                        string escapedKeyword = cleanKeyword.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
+
+                        // C#側で前後に % を付与してパラメータにセットします
+                        cmd.Parameters.Add("@Keyword", NpgsqlTypes.NpgsqlDbType.Varchar, 100).Value = $"%{escapedKeyword}%";
+                    }
+
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -90,6 +115,7 @@ namespace CompanyOrgSystem.Controllers
             ViewBag.IsAdmin = isAdmin;
             return View("~/Views/Home/SearchScreen.cshtml", results);
         }
+
         // 🌳 ⑤ 管理者専用：組織図を再帰クエリでツリー表示する処理
         public IActionResult OrgTree()
         {

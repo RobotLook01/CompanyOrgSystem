@@ -20,7 +20,11 @@
     <form asp-controller="Home" asp-action="DoSearch" method="post" class="row g-3 my-4 bg-white p-3 border rounded shadow-sm">
         <input type="hidden" name="isAdmin" value="@isAdmin.ToString().ToLower()" />
         <div class="col-md-8">
-            <input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" required />
+            <!--input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" required /-->
+            <!-- ⭕ 修正後：required を完全に削除する -->
+            <input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" />
+
+
         </div>
         <div class="col-md-4 d-flex align-items-end">
             <button type="submit" class="btn @(isAdmin ? "btn-danger" : "btn-primary") btn-lg w-100 fw-bold shadow">
