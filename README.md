@@ -209,7 +209,7 @@ VB.NETでもC#でも、多態性（ポリモーフィズム）、オーバーロ
 ```sql
 Public Class Printer
     ' 1. 引数なし
-    Public Overloads Sub PrintData()
+    Public Overloads Sub <B>PrintData</B>()
         Console.WriteLine("テストページを印刷します。")
     End Sub
 
