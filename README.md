@@ -223,7 +223,7 @@ Public Class Printer
     End Sub
 End Class
 
-' --- 使うとき ---
+' --- 使うとき ---   クラス「Printer()」のインスタンスを、自分自身のクラスの内部に「部品p」として持たせる
 Dim p As New Printer()
 p.PrintData()             ' 1が呼ばれる
 p.PrintData(5)            ' 2が呼ばれる
