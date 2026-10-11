@@ -108,7 +108,7 @@ CREATE TABLE belongs (
 ```sql
 public class LoggingList<T>
 {
-    // 別のクラス（List<T>）を内部に保持する（コンポジション）
+    // 別のクラス（List<T>）を内部に保持する（コンポジション）・・・メンバ名「_innerList」は、基底クラスを継承せず、ローカルに定義（has-a関係）
     private readonly List<T> _innerList = new List<T>();
 
     public void Add(T item)
@@ -126,7 +126,7 @@ public class LoggingList<T>
 ### 継承を使った場合（密結合になり不適切になりやすい例）
   基底クラスをそのまま受け継ぐ（is-a関係）ため、親クラスの変更に影響を受けやすくなります。
 ```sql
-// List<T>を丸ごと継承
+// List<T>を丸ごと継承　　・・・・・・・・・・・クラス名「LoggingList<T>」は、基底クラスList<T>を丸ごと継承する（is-a関係）
 public class LoggingList<T> : List<T>
 {
     public new void Add(T item)
