@@ -27,7 +27,8 @@ Webシステムの基本であるセキュリティ要件として、ポータ�
 - **データベース**: PostgreSQL (ぽすぐれ)
 - **データアクセスライブラリ**: Npgsql (エヌ・ピージー・エスキューエル)
 - **フロントエンド（UI設計）**: HTML5 / CSS3 / Bootstrap 5 (レスポンシブ対応)
-- **インフラ（公開プラットフォーム）**: Microsoft Azure App Service (F1 Free プラン)
+- **インフラ（公開プラットフォーム）**: RenderでWebアプリを公開(無料枠)
+※Microsoft Azure App Service (F1 Free プラン)ではPostgreSQLサポートを無料で出来ませんでした。
 
 ---
 
