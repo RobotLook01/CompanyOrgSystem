@@ -213,13 +213,13 @@ Public Class Printer
         Console.WriteLine("テストページを印刷します。")
     End Sub
 
- -   ' 2. 引数の数が違う（数値型）
- +   Public Overloads Sub PrintData(ByVal pageCount As Integer)
+-    ' 2. 引数の数が違う（数値型）
++    Public Overloads Sub PrintData(ByVal pageCount As Integer)
         Console.WriteLine($"{pageCount} ページ印刷します。")
     End Sub
 
-  -  ' 3. 引数の数は同じだが、型が違う（文字列型）
-  +  Public Overloads Sub PrintData(ByVal text As String)
+-    ' 3. 引数の数は同じだが、型が違う（文字列型）
++    Public Overloads Sub PrintData(ByVal text As String)
         Console.WriteLine($"文字列「{text}」を印刷します。")
     End Sub
 End Class
