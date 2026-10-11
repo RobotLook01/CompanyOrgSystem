@@ -234,7 +234,7 @@ p.PrintData("こんにちは") ' 3が呼ばれる
 
 # C# の実装例
 <pre>
-public class **Printer** {
+public class <B>Printer</B> {
     // 1. 引数なし
     public void PrintData() {
         Console.WriteLine("テストページを印刷します。");
