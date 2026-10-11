@@ -234,7 +234,7 @@ p.PrintData("こんにちは") ' 3が呼ばれる
 
 # C# の実装例
 <pre>
-public class <B>Printer</B> {
+public class <font color="red">Printer</font> {
     // 1. 引数なし
     public void PrintData() {
         Console.WriteLine("テストページを印刷します。");
@@ -250,14 +250,14 @@ public class <B>Printer</B> {
         Console.WriteLine($"文字列「{text}」を印刷します。");
     }
 }
-</pre>
+
 // --- 使うとき ---
 Printer p = new Printer();
 p.PrintData();           // 1が呼ばれる
 p.PrintData(5);          // 2が呼ばれる
 p.PrintData("こんにちは"); // 3が呼ばれる
 
-```
+</pre>
 
 現行では、publicな多態性(ポリモーフィズム)を実装したクラス群においてオーバーライドキーワードを暗黙にしたまま放置している。
 そのうえに今回はOPTIONALキーワードと暗黙的にオーバーライドキーワードを同居させたクラスを新規作成してしまった。
