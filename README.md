@@ -233,31 +233,31 @@ p.PrintData("こんにちは") ' 3が呼ばれる
 ```
 
 # C# の実装例
-<pre>
+```diff
 public class <B>Printer</B> {
-    // 1. 引数なし
-    public void PrintData() {
+-    // 1. 引数なし
++    public void PrintData() {
         Console.WriteLine("テストページを印刷します。");
     }
 
-    // 2. 引数の数が違う（数値型）
-    public void PrintData(int pageCount) {
+-    // 2. 引数の数が違う（数値型）
++    public void PrintData(int pageCount) {
         Console.WriteLine($"{pageCount} ページ印刷します。");
     }
 
-    // 3. 引数の数は同じだが、型が違う（文字列型）
-    public void PrintData(string text) {
+-    // 3. 引数の数は同じだが、型が違う（文字列型）
++    public void PrintData(string text) {
         Console.WriteLine($"文字列「{text}」を印刷します。");
     }
 }
 
-// --- 使うとき ---
-Printer p = new Printer();
+-// --- 使うとき ---
++Printer p = new Printer();
 p.PrintData();           // 1が呼ばれる
 p.PrintData(5);          // 2が呼ばれる
 p.PrintData("こんにちは"); // 3が呼ばれる
 
-</pre>
+```
 
 現行では、publicな多態性(ポリモーフィズム)を実装したクラス群においてオーバーライドキーワードを暗黙にしたまま放置している。
 そのうえに今回はOPTIONALキーワードと暗黙的にオーバーライドキーワードを同居させたクラスを新規作成してしまった。
