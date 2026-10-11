@@ -209,7 +209,7 @@ VB.NETでもC#でも、多態性（ポリモーフィズム）、オーバーロ
 ```sql
 Public Class Printer
     ' 1. 引数なし
-    Public Overloads Sub <B>PrintData</B>()
+    Public Overloads Sub PrintData()
         Console.WriteLine("テストページを印刷します。")
     End Sub
 
@@ -233,8 +233,8 @@ p.PrintData("こんにちは") ' 3が呼ばれる
 ```
 
 # C# の実装例
-```sql
-public class Printer {
+<pre>
+public class <B>Printer</B> {
     // 1. 引数なし
     public void PrintData() {
         Console.WriteLine("テストページを印刷します。");
@@ -250,7 +250,7 @@ public class Printer {
         Console.WriteLine($"文字列「{text}」を印刷します。");
     }
 }
-
+</pre>
 // --- 使うとき ---
 Printer p = new Printer();
 p.PrintData();           // 1が呼ばれる
