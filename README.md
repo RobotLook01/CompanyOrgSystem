@@ -206,26 +206,26 @@ VB.NETでもC#でも、多態性（ポリモーフィズム）、オーバーロ
 引数の型や数を変えて、同じメソッド名で異なる処理を呼び分ける方法は、多態性（ポリモーフィズム）の一種である「静的多態性（スタティック・ポリモーフィズム）」、一般的には「オーバーロード（メソッドの多重定義）」と呼ばれます。
 
 # VB.NET の実装例
-```sql
+```diff
 Public Class Printer
-    ' 1. 引数なし
-    Public Overloads Sub PrintData()
+-    ' 1. 引数なし
++    Public Overloads Sub PrintData()
         Console.WriteLine("テストページを印刷します。")
     End Sub
 
-    ' 2. 引数の数が違う（数値型）
-    Public Overloads Sub PrintData(ByVal pageCount As Integer)
+ -   ' 2. 引数の数が違う（数値型）
+ +   Public Overloads Sub PrintData(ByVal pageCount As Integer)
         Console.WriteLine($"{pageCount} ページ印刷します。")
     End Sub
 
-    ' 3. 引数の数は同じだが、型が違う（文字列型）
-    Public Overloads Sub PrintData(ByVal text As String)
+  -  ' 3. 引数の数は同じだが、型が違う（文字列型）
+  +  Public Overloads Sub PrintData(ByVal text As String)
         Console.WriteLine($"文字列「{text}」を印刷します。")
     End Sub
 End Class
 
-' --- 使うとき ---   クラス「Printer()」のインスタンスを、自分自身のクラスの内部に「部品p」として持たせる
-Dim p As New Printer()
+-' --- 使うとき ---   クラス「Printer()」のインスタンスを、自分自身のクラスの内部に「部品p」として持たせる
++Dim p As New Printer()
 p.PrintData()             ' 1が呼ばれる
 p.PrintData(5)            ' 2が呼ばれる
 p.PrintData("こんにちは") ' 3が呼ばれる
