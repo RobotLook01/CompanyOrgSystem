@@ -92,8 +92,9 @@ app.MapControllerRoute(
     //この設定（特に {controller=Home}）があるため、URLに Home が書かれていなくても
     //自動的に Home コントローラーとして処理され、エラーになりません。
     //------------------------------------------------------------------------------------------------//
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+    //pattern: "{controller=Home}/{action=Index}/{id?}")
+    //.WithStaticAssets();
 
 
 // アプリ起動時に、現在の環境名をコンソール（出力ウインドウ）に表示する
