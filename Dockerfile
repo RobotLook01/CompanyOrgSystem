@@ -20,4 +20,3 @@ ENV ASPNETCORE_URLS=http://+:10000
 
 # 起動するDLLを指定
 ENTRYPOINT ["dotnet", "CompanyOrgSystem.dll"]
-
