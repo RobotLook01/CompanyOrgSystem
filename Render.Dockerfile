@@ -1,4 +1,4 @@
-# 1. ビルド用の環境（DockerHub公式ミラーからSDKを取得）
+# 1. ビルド用の環境（DockerHub公式の.NET SDKイメージを指定）
 FROM docker.io/microsoft/dotnet-sdk:8.0 AS build-env
 WORKDIR /app
 
@@ -10,7 +10,7 @@ RUN dotnet restore
 COPY . ./
 RUN dotnet publish -c Release -o out
 
-# 2. 実行用の環境（DockerHub公式ミラーからRuntimeを取得）
+# 2. 実行用の環境（DockerHub公式のASP.NET Core Runtimeイメージを指定）
 FROM docker.io/microsoft/dotnet-aspnet:8.0
 WORKDIR /app
 COPY --from=build-env /app/out .
