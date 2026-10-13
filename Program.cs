@@ -81,7 +81,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapStaticAssets();
+app.UseStaticFiles();    //app.MapStaticAssets();
 
 // 🏠メニューバー「HOME」の処理
 app.MapControllerRoute(
