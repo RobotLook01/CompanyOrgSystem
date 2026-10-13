@@ -1,5 +1,5 @@
-# 1. ビルド用の環境（AWSパブリックレジストリから.NET 8.0 SDKを取得）
-FROM public.ecr.aws/sam/build-dotnet8:latest AS build-env
+# 1. ビルド用の環境（.NET 10.0 SDK環境を指定）
+FROM ://microsoft.com AS build-env
 WORKDIR /app
 
 # プロジェクトファイルをコピーして復元
@@ -10,8 +10,8 @@ RUN dotnet restore
 COPY . ./
 RUN dotnet publish -c Release -o out
 
-# 2. 実行用の環境（AWSパブリックレジストリから.NET 8.0 ランタイムを取得）
-FROM public.ecr.aws/sam/build-dotnet8:latest
+# 2. 実行用の環境（.NET 10.0 ASP.NET Runtime環境を指定）
+FROM ://microsoft.com
 WORKDIR /app
 COPY --from=build-env /app/out .
 
