@@ -3,6 +3,19 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -------------------------------------------------------------
+// 【追加その1】セッション用のサービスをシステムに登録します
+// -------------------------------------------------------------
+builder.Services.AddDistributedMemoryCache(); // セッションにメモリを使う設定
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // 30分間操作がないとセッション切れにする
+    options.Cookie.HttpOnly = true;                // セキュリティを高める設定
+    options.Cookie.IsEssential = true;             // 同意なしでもクッキーを使えるようにする
+});
+// -------------------------------------------------------------
+
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -79,9 +92,17 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// -------------------------------------------------------------
+// 【追加その2】セッションのミドルウェアを有効にします
+// ※ ⚠️ 必ず app.UseRouting() より後ろ、app.UseAuthorization() より前に書いてください！
+// -------------------------------------------------------------
+app.UseSession();
+// -------------------------------------------------------------
+
+
 app.UseAuthorization();
 
-app.MapStaticAssets();
+app.UseStaticFiles();    //app.MapStaticAssets();
 
 // 🏠メニューバー「HOME」の処理
 app.MapControllerRoute(
@@ -92,8 +113,9 @@ app.MapControllerRoute(
     //この設定（特に {controller=Home}）があるため、URLに Home が書かれていなくても
     //自動的に Home コントローラーとして処理され、エラーになりません。
     //------------------------------------------------------------------------------------------------//
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+//pattern: "{controller=Home}/{action=Index}/{id?}")
+//.WithStaticAssets();
 
 
 // アプリ起動時に、現在の環境名をコンソール（出力ウインドウ）に表示する

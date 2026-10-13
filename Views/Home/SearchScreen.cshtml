@@ -2,6 +2,7 @@
 
 @{
     bool isAdmin = ViewBag.IsAdmin ?? false;
+    //bool isKeyword = ViewBag.Keyword != null && !string.IsNullOrEmpty(ViewBag.Keyword.ToString());
     ViewData["Title"] = isAdmin ? "【管理者】社員検索" : "【一般】社員検索";
 }
 
@@ -22,9 +23,9 @@
         <div class="col-md-8">
             <!--input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" required /-->
             <!-- ⭕ 修正後：required を完全に削除する -->
-            <input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" />
-
-
+            <!--input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" /-->
+            <!--「もしnullなら空文字（""）にする」という安全な構文（ヌル合体演算子 ??）に書き換え-->
+            <input type="text" name="keyword" value="@(ViewBag.Keyword ?? "")" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" />
         </div>
         <div class="col-md-4 d-flex align-items-end">
             <button type="submit" class="btn @(isAdmin ? "btn-danger" : "btn-primary") btn-lg w-100 fw-bold shadow">

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using CompanyOrgSystem.Models;
 using Npgsql;
 using System.Data;
+using Microsoft.AspNetCore.Http; // セッションを使うために必要
 
 namespace CompanyOrgSystem.Controllers
 {
@@ -20,8 +21,16 @@ namespace CompanyOrgSystem.Controllers
         }
 
         // 🏠 ① 最初に開く「メニュー画面」の処理
-        public IActionResult Index()
+        //public IActionResult Index()
+        //{
+        //    return View();
+        //}
+        public IActionResult Index(bool isAdmin = false)
         {
+            // 💡 最初の画面表示の時点でも、裏でセッションに状態を保存しておく
+            HttpContext.Session.SetString("IsAdmin", isAdmin ? "true" : "false");
+
+            ViewBag.IsAdmin = isAdmin;
             return View();
         }
 
@@ -38,6 +47,14 @@ namespace CompanyOrgSystem.Controllers
         {
             if (password == "admin123")
             {
+                // 📌 【最重要の修正】ここでセッションに管理者であることを安全に保存します！
+                HttpContext.Session.SetString("IsAdmin", "true");
+
+
+                // 💡 ログイン直後は、過去の古い検索履歴（キーワード）を一度きれいに消去する
+                HttpContext.Session.Remove("LastKeyword");
+
+
                 ViewBag.IsAdmin = true;
                 var emptyList = new List<EmployeeSearchResult>();
                 return View("~/Views/Home/SearchScreen.cshtml", emptyList);
@@ -53,6 +70,15 @@ namespace CompanyOrgSystem.Controllers
         [HttpPost]
         public IActionResult DoSearch(string keyword, bool isAdmin)
         {
+            // 💡 ここで「"true"」という文字列が確実にセットされているか確認してください
+            HttpContext.Session.SetString("IsAdmin", isAdmin ? "true" : "false");
+
+
+            // 【重要】null対策をして、入力された文字を確実にセッションに保存
+            string savedKeyword = keyword ?? "";
+            HttpContext.Session.SetString("LastKeyword", savedKeyword);
+            //HttpContext.Session.SetString("LastKeyword", keyword ?? ""); // ★追加
+
             var results = new List<EmployeeSearchResult>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
 
@@ -113,12 +139,26 @@ namespace CompanyOrgSystem.Controllers
             }
 
             ViewBag.IsAdmin = isAdmin;
+            ViewBag.Keyword = savedKeyword; // 💡 入力欄に文字を残すためにViewBagに入れる
+
+            //return View("Search", model); 
             return View("~/Views/Home/SearchScreen.cshtml", results);
         }
 
         // 🌳 ⑤ 管理者専用：組織図を再帰クエリでツリー表示する処理
         public IActionResult OrgTree()
         {
+            // 💡 サーバーのセッションから安全に権限をチェックする
+            string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
+            bool isAdmin = sessionAdmin == "true";
+
+            // 🔴 一般ユーザーが不正にURLを直に叩いてアクセスしてきたら弾く（セキュリティ強化）
+            if (!isAdmin)
+            {
+                return RedirectToAction("Index"); // メニューに戻す
+            }
+
+            ViewBag.IsAdmin = true;
             var treeData = new List<OrgTreeResult>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
 
@@ -177,5 +217,73 @@ namespace CompanyOrgSystem.Controllers
             return View("~/Views/Home/OrgTree.cshtml", treeData);
         }
 
+        // 📌 【新設】Controllers/HomeController.cs の一番下などに以下を追加してください
+        [HttpGet]
+        public IActionResult BackToSearch()
+        {
+            // セッションから状態を安全に読み取る
+            string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
+            bool isAdmin = sessionAdmin == "true";
+
+            // 💡 セッションから「最後に検索したキーワード」を確実に取り出す
+            string lastKeyword = HttpContext.Session.GetString("LastKeyword") ?? "";
+
+            var results = new List<EmployeeSearchResult>();
+            string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
+
+            string cleanKeyword = lastKeyword.Trim();
+
+            // 【重要】文字が入っているかどうかにかかわらず、前回の状態と同じSQLを組み立てる
+            string sql = @"
+            SELECT 
+                e.employee_id, 
+                e.employee_name, 
+                d.department_name,
+                CASE WHEN b.is_main_job = TRUE THEN '主務' ELSE '兼務' END AS division_type,
+                e.email
+            FROM employees e
+            INNER JOIN belongs b ON e.employee_id = b.employee_id
+            INNER JOIN departments d ON b.department_id = d.department_id";
+
+            bool hasKeyword = !string.IsNullOrEmpty(cleanKeyword);
+            if (hasKeyword)
+            {
+                sql += " WHERE e.employee_name LIKE @Keyword";
+            }
+
+            sql += " ORDER BY e.employee_id, b.is_main_job DESC";
+
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    if (hasKeyword)
+                    {
+                        string escapedKeyword = cleanKeyword.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
+                        cmd.Parameters.Add("@Keyword", NpgsqlTypes.NpgsqlDbType.Varchar, 100).Value = $"%{escapedKeyword}%";
+                    }
+
+                    conn.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            results.Add(new EmployeeSearchResult
+                            {
+                                EmployeeId = reader.GetInt32(0),
+                                EmployeeName = reader.GetString(1),
+                                DepartmentName = reader.GetString(2),
+                                DivisionType = reader.GetString(3),
+                                Email = reader.IsDBNull(4) ? "" : reader.GetString(4)
+                            });
+                        }
+                    }
+                }
+            }
+
+            ViewBag.IsAdmin = isAdmin;
+            ViewBag.Keyword = lastKeyword; // 💡 入力欄に文字を復活させる
+            return View("~/Views/Home/SearchScreen.cshtml", results);
+        }
     }
 }
