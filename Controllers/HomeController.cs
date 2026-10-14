@@ -285,5 +285,107 @@ namespace CompanyOrgSystem.Controllers
             ViewBag.Keyword = lastKeyword; // 💡 入力欄に文字を復活させる
             return View("~/Views/Home/SearchScreen.cshtml", results);
         }
+
+        //    // -------------------------------------------------------------
+        //    // 🌳 ⑥-1：【新設】ビジュアル組織図エディタ画面の表示
+        //    // -------------------------------------------------------------
+        //    [HttpGet]
+        //    public IActionResult OrgEditScreen()
+        //    {
+        //        // セッションから安全に権限をチェック
+        //        string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
+        //        if (sessionAdmin != "true")
+        //        {
+        //            return RedirectToAction("Index"); // 一般ユーザーならメニューに弾く
+        //        }
+
+        //        string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
+        //        string jsonResult = "[]"; // 初期値（空配列）
+
+        //        // 💡 ぽすぐれ側で組織図ライブラリが直接読めるJSONを爆速生成するSQL
+        //        string sql = @"
+        //            WITH RECURSIVE org_chart AS (
+        //                SELECT department_id, department_name, parent_id, 1 AS level, CAST(department_name AS text) AS path
+        //                FROM departments WHERE parent_id IS NULL
+        //                UNION ALL
+        //                SELECT d.department_id, d.department_name, d.parent_id, oc.level + 1 AS level, oc.path || ' > ' || d.department_name AS path
+        //                FROM departments d
+        //                INNER JOIN org_chart oc ON d.parent_id = oc.department_id
+        //            )
+        //            SELECT COALESCE(json_strip_nulls(json_agg(json_build_object(
+        //                'id',  department_id,
+        //                'pid', parent_id,
+        //                'name', department_name,
+        //                'level', level,
+        //                'path', path
+        //            ))), '[]'::json)
+        //            FROM org_chart;";
+
+        //        using (var conn = new NpgsqlConnection(connectionString))
+        //        {
+        //            using (var cmd = new NpgsqlCommand(sql, conn))
+        //            {
+        //                conn.Open();
+        //                var scalarResult = cmd.ExecuteScalar();
+        //                if (scalarResult != DBNull.Value && scalarResult != null)
+        //                {
+        //                    jsonResult = scalarResult.ToString();
+        //                }
+        //            }
+        //        }
+
+        //        // 💡 JavaScriptにそのまま渡せるように生JSONをViewBagへ
+        //        ViewBag.OrgJsonData = jsonResult;
+        //        ViewBag.IsAdmin = true;
+
+        //        return View("~/Views/Home/OrgEditScreen.cshtml");
+        //    }
+
+        //    // -------------------------------------------------------------
+        //    // 🌳 ⑥-2：【新設】画面でドラッグ＆ドロップされた時にDBを更新するAPI
+        //    // -------------------------------------------------------------
+        //    [HttpPost]
+        //    public IActionResult UpdateOrgParent([FromBody] OrgMoveRequest request)
+        //    {
+        //        // 安全のためセッション権限チェック
+        //        string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
+        //        if (sessionAdmin != "true") { return Forbid(); }
+
+        //        if (request.DepartmentId == request.NewParentId)
+        //        {
+        //            return BadRequest(new { success = false, message = "自分自身を親にすることはできません。" });
+        //        }
+
+        //        string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
+
+        //        // 💡 親組織（parent_id）を上書き更新するSQL
+        //        string sql = @"
+        //            UPDATE departments 
+        //            SET parent_id = @NewParentId 
+        //            WHERE department_id = @DepartmentId;";
+
+        //        using (var conn = new NpgsqlConnection(connectionString))
+        //        {
+        //            using (var cmd = new NpgsqlCommand(sql, conn))
+        //            {
+        //                cmd.Parameters.AddWithValue("@DepartmentId", request.DepartmentId);
+        //                cmd.Parameters.AddWithValue("@NewParentId", request.NewParentId ?? (object)DBNull.Value);
+
+        //                conn.Open();
+        //                cmd.ExecuteNonQuery();
+        //            }
+        //        }
+
+        //        return Ok(new { success = true, message = "組織構造をリアルタイム更新しました！" });
+        //    }
+        //}
+
+        // 💡 画面から届くドラッグデータを型安全に受け取るためのクラス
+        //public class OrgMoveRequest
+        //{
+        //    public int DepartmentId { get; set; }
+        //    public int? NewParentId { get; set; }
+        //}
+
     }
 }

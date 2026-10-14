@@ -1,0 +1,74 @@
+﻿@{
+    ViewData["Title"] = "動的組織図エディタ";
+}
+
+<div class="container mt-4">
+    <div class="p-4 mb-4 bg-danger text-white rounded-3 shadow-sm">
+        <h2 class="fw-bold">🌳 企業組織図ビジュアルエディタ</h2>
+        <p class="m-0 fs-6">部署の箱をドラッグ＆ドロップして移動させるだけで、データベース（再帰階層モデル）構造がリアルタイムに自動更新されます。</p>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center my-3">
+        <a asp-controller="Home" asp-action="BackToSearch" class="btn btn-outline-secondary fw-bold">◀ 管理画面に戻る</a>
+        <span class="badge bg-success p-2 fs-6 shadow-sm">💾 リアルタイム自動保存：有効</span>
+    </div>
+
+    <!-- 💡 組織図が描画されるキャンバス領域 -->
+    <div class="card shadow-sm border-danger">
+        <div class="card-body bg-light p-0">
+            <div id="tree" style="width: 100%; height: 650px; background-color: #f8f9fa;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 📦 組織図を描画・操作するための最強ライブラリ「OrgChart.js」を読み込む -->
+<script src="https://balkangraph.com"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. C#（ぽすぐれ）が生成したJSON配列をそのままJavaScriptに展開
+        var chartData = @Html.Raw(ViewBag.OrgJsonData);
+
+        // 2. 組織図の初期化とデザイン設定
+        var chart = new OrgChart(document.getElementById("tree"), {
+            template: "ana", // 見やすいテンプレートデザイン
+            enableSearch: false,
+            draggable: true, // 💡 これをtrueにするだけでドラッグ＆ドロップが有効化！
+            nodeBinding: {
+                field_0: "name",
+                field_1: "path"
+            },
+            nodes: chartData
+        });
+
+        // 3. 画面上でドラッグ＆ドロップの「移動」が完了した瞬間のイベントをキャッチ
+        chart.on('update', function (sender, args) {
+            var movedNode = args.newData; // 移動完了後の新しい部署データ
+
+            // 4. C#側の更新用API（UpdateOrgParent）へ非同期でPOST送信
+            fetch('/Home/UpdateOrgParent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    DepartmentId: parseInt(movedNode.id),
+                    NewParentId: movedNode.pid ? parseInt(movedNode.pid) : null
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("DB更新に失敗しました");
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message); // ブラウザのコンソールにログを出す
+            })
+            .catch(error => {
+                alert("組織構造の変更を保存できませんでした。一度画面をリロードしてください。");
+                console.error(error);
+            });
+        });
+    });
+</script>
