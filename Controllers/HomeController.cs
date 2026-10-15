@@ -255,7 +255,7 @@ namespace CompanyOrgSystem.Controllers
             // 1. サーバーのセッションから安全に管理者権限をチェック
             string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
             bool isAdmin = sessionAdmin == "true";
-            //secret = HttpContext.Session.GetString("secret") ?? "false";
+            secret = HttpContext.Session.GetString("secret") ?? "";
 
             // 🔴 一般ユーザーが不正にURLを直に叩いてアクセスしてきたら弾く（セッションセキュリティ）
             if (!isAdmin)
@@ -268,7 +268,7 @@ namespace CompanyOrgSystem.Controllers
             string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
 
             // 2. 💡【Git安全設計】Renderの環境変数から、秘密の鍵を読み込む
-            string realSecret = _configuration["SECRET_KEY"];
+            string realSecret = _configuration["SECRET_KEY"] ?? "";
             //string realSecret = _configuration.GetConnectionString("SECRET_KEY") ?? "";
 
             // URLの末尾の secret が、Renderに設定した秘密の鍵と一致した場合だけ【本番保存】を許可
