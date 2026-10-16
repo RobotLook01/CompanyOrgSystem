@@ -249,13 +249,12 @@ namespace CompanyOrgSystem.Controllers
         /// <summary>
         /// 🌳 ⑤ 管理者専用：環境変数ガード版組織図ツリー表示（Git公開完全対応版）
         /// </summary>
-        /// <param name="secret">URLの末尾につける秘密のキー (例: ?secret=1234)</param>
-        public IActionResult OrgTree(string secret)
+        /// <param name="securet">💡 URLの末尾の「?securet=kaitokun0913」をここで完全に自動受信します</param>
+        public IActionResult OrgTree(string securet)
         {
             // 1. サーバーのセッションから安全に管理者権限をチェック
             string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
             bool isAdmin = sessionAdmin == "true";
-            secret = HttpContext.Session.GetString("secret") ?? "";
 
             // 🔴 一般ユーザーが不正にURLを直に叩いてアクセスしてきたら弾く（セッションセキュリティ）
             if (!isAdmin)
@@ -269,10 +268,21 @@ namespace CompanyOrgSystem.Controllers
 
             // 2. 💡【Git安全設計】Renderの環境変数から、秘密の鍵を読み込む
             string realSecret = _configuration["SECRET_KEY"] ?? "";
-            //string realSecret = _configuration.GetConnectionString("SECRET_KEY") ?? "";
 
-            // URLの末尾の secret が、Renderに設定した秘密の鍵と一致した場合だけ【本番保存】を許可
-            if (!string.IsNullOrEmpty(secret) && !string.IsNullOrEmpty(realSecret)  && ((secret != "") && (secret == realSecret)))
+            // 💡 もしURLから値（securet）が届いていたら、次回の遷移のためにセッションに大切に保管しておく
+            if (!string.IsNullOrEmpty(securet))
+            {
+                HttpContext.Session.SetString("securet_saved", securet);
+            }
+            else
+            {
+                // URLにパラメータがない場合は、前回セッションに保存した値を復元する
+                securet = HttpContext.Session.GetString("securet_saved") ?? "";
+            }
+
+            // 🔒【厳密な答え合わせ】
+            // URL（またはセッション）から届いた securet が、Renderの環境変数「SECRET_KEY（kaitokun0913）」と一致するか判定
+            if (!string.IsNullOrEmpty(securet) && !string.IsNullOrEmpty(realSecret) && (securet == realSecret))
             {
                 ViewBag.IsRealSave = true; // 本番保存モード（管理者専用）
                 ViewData["ModeBadge"] = "🔒 本番データ更新モード（管理者専用）";
@@ -342,7 +352,6 @@ namespace CompanyOrgSystem.Controllers
             {
                 return View("~/Views/Home/OrgTreeS.cshtml", treeData);
             }
-            
         }
 
 
