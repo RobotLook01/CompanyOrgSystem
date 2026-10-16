@@ -8,15 +8,17 @@
 
 <div class="container mt-4 mb-5">
     <!-- 🏢 ヘッダーエリア -->
-    <div class="p-4 mb-4 bg-dark text-white rounded-3 shadow-sm d-flex justify-content-between align-items-center">
+    <div class="card-header bg-success text-white fw-bold">
+    <!--div class="p-4 mb-4 bg-yellow text-white rounded-3 shadow-sm d-flex justify-content-between align-items-center"-->
         <div>
-            <h2 class="fw-bold m-0">🌳 企業組織図マスターツリー [リモコン管理モード]</h2>
+            <h2 class="fw-bold m-0">🌳 企業組織図マスターツリー [管理者モード]</h2>
             <p class="m-0 fs-6 text-muted mt-1">Npgsqlによる即時コミット処理と、PostgreSQLの再帰クエリが100%リアルタイムに完全連動しています。</p>
         </div>
         <div>
-            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light fw-bold">◀ メメニューに戻る</a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light fw-bold">◀ メニューに戻る</a>
+            <a asp-controller="Home" asp-action="BackToSearch" class="btn btn-outline-light fw-bold">◀ 検索画面に戻る</a>
         </div>
-    </div>
+    </!--div>
 
     <!-- 💡 操作ヘルプバッジ -->
     <div class="alert alert-info shadow-sm mb-4 d-flex justify-content-between align-items-center py-2">
