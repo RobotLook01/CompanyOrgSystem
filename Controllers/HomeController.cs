@@ -272,7 +272,7 @@ namespace CompanyOrgSystem.Controllers
             //string realSecret = _configuration.GetConnectionString("SECRET_KEY") ?? "";
 
             // URLの末尾の secret が、Renderに設定した秘密の鍵と一致した場合だけ【本番保存】を許可
-            if (!string.IsNullOrEmpty(secret) && !string.IsNullOrEmpty(realSecret) && secret == realSecret)
+            if (!string.IsNullOrEmpty(secret) && !string.IsNullOrEmpty(realSecret)  && ((secret != "") && (secret == realSecret)))
             {
                 ViewBag.IsRealSave = true; // 本番保存モード（管理者専用）
                 ViewData["ModeBadge"] = "🔒 本番データ更新モード（管理者専用）";
@@ -333,8 +333,16 @@ namespace CompanyOrgSystem.Controllers
                 }
             }
 
-            // 4. データをモデルに渡して、リモコン付きツリー画面を表示！
-            return View("~/Views/Home/OrgTree.cshtml", treeData);
+            // 4. データをモデルに渡して、管理者用画面を表示！
+            if (ViewBag.IsRealSave == true)
+            {
+                return View("~/Views/Home/OrgTree.cshtml", treeData);
+            }
+            else
+            {
+                return View("~/Views/Home/OrgTreeS.cshtml", treeData);
+            }
+            
         }
 
 
