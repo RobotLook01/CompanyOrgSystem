@@ -145,144 +145,48 @@ namespace CompanyOrgSystem.Controllers
             return View("~/Views/Home/SearchScreen.cshtml", results);
         }
 
-
-        ///// <summary>
-        ///// 🌳 ⑤ 組織図ツリー画面を表示するアクション（環境変数ガード版・Git公開OK）
-        ///// </summary>
-        //public IActionResult OrgTree(string secret)
-        //{
-        //    ViewBag.IsAdmin = true;
-
-        //    // 💡【ここがプロの安全設計】
-        //    // コードに直接パスワードを書かず、Renderの設定（環境変数）から本物のパスワードをその場で読み込む！
-        //    string realSecret = _configuration["SECRET_KEY"];
-
-        //    // URLの末尾の secret が、Renderに設定した秘密の鍵と一致した場合だけ本番保存を許可
-        //    if (!string.IsNullOrEmpty(secret) && !string.IsNullOrEmpty(realSecret) && secret == realSecret)
-        //    {
-        //        ViewBag.IsRealSave = true; // 本番保存モード（管理者専用）
-        //        ViewData["ModeBadge"] = "🔒 本番データ更新モード（管理者専用）";
-        //    }
-        //    else
-        //    {
-        //        ViewBag.IsRealSave = false; // 体験デモモード（採用担当者用）
-        //        ViewData["ModeBadge"] = "🎮 操作体験デモモード（採用担当者用）";
-        //    }
-
-        //    return View();
-        //}
-
-
-        //// 🌳 ⑤ 管理者専用：組織図を再帰クエリでツリー表示する処理
-        //public IActionResult OrgTree()
-        //{
-        //    // 💡 サーバーのセッションから安全に権限をチェックする
-        //    string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
-        //    bool isAdmin = sessionAdmin == "true";
-
-        //    // 🔴 一般ユーザーが不正にURLを直に叩いてアクセスしてきたら弾く（セキュリティ強化）
-        //    if (!isAdmin)
-        //    {
-        //        return RedirectToAction("Index"); // メニューに戻す
-        //    }
-
-        //    ViewBag.IsAdmin = true;
-        //    var treeData = new List<OrgTreeResult>();
-        //    string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
-
-        //    // 💡 ぽすぐれの強力な「再帰クエリ（WITH RECURSIVE）」のSQL文です！
-        //    string sql = @"
-        //        WITH RECURSIVE org_chart AS (
-        //            -- 1. 最上位の組織（アンカー部）
-        //            SELECT 
-        //                department_id, 
-        //                department_name, 
-        //                parent_id, 
-        //                1 AS level,
-        //                CAST(department_name AS text) AS path
-        //            FROM departments
-        //            WHERE parent_id IS NULL
-
-        //            UNION ALL
-
-        //            -- 2. 子組織を再帰的に結合（再帰部）
-        //            SELECT 
-        //                d.department_id, 
-        //                d.department_name, 
-        //                d.parent_id, 
-        //                oc.level + 1 AS level,
-        //                oc.path || ' > ' || d.department_name AS path
-        //            FROM departments d
-        //            INNER JOIN org_chart oc ON d.parent_id = oc.department_id
-        //        )
-        //        SELECT department_id, department_name, parent_id, level, path 
-        //        FROM org_chart
-        //        ORDER BY path;";
-
-        //    using (var conn = new NpgsqlConnection(connectionString))
-        //    {
-        //        using (var cmd = new NpgsqlCommand(sql, conn))
-        //        {
-        //            conn.Open();
-        //            using (var reader = cmd.ExecuteReader())
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    treeData.Add(new OrgTreeResult
-        //                    {
-        //                        DepartmentId = reader.GetInt32(0),
-        //                        DepartmentName = reader.GetString(1),
-        //                        ParentId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
-        //                        Level = reader.GetInt32(3),
-        //                        Path = reader.GetString(4)
-        //                    });
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    // 階層データを持って専用の画面を表示します
-        //    return View("~/Views/Home/OrgTree.cshtml", treeData);
-        //}
-
-
         /// <summary>
-        /// 🌳 ⑤ 管理者専用：環境変数ガード版組織図ツリー表示（Git公開完全対応版）
+        /// 🌳 ⑤ 管理者専用：環境変数ガード版組織図ツリー表示（Git公開完全対応・一撃表示版）
         /// </summary>
-        /// <param name="securet">💡 URLの末尾の「?securet=kaitokun0913」をここで完全に自動受信します</param>
+        /// <param name="securet">URLの末尾の秘密のキー</param>
         public IActionResult OrgTree(string securet)
         {
+            // 💡 URLのパラメータ名が「secret」で届く可能性も考慮して両方で受け取れるように二段構えにします
+            if (string.IsNullOrEmpty(securet))
+            {
+                securet = HttpContext.Request.Query["secret"];
+            }
+
             // 1. サーバーのセッションから安全に管理者権限をチェック
             string sessionAdmin = HttpContext.Session.GetString("IsAdmin") ?? "false";
-            bool isAdmin = sessionAdmin == "true";
 
-            // 🔴 一般ユーザーが不正にURLを直に叩いてアクセスしてきたら弾く（セッションセキュリティ）
+            // 2. 💡【Git安全設計】Renderの環境変数から、秘密の鍵を読み込む
+            string realSecret = _configuration["SECRET_KEY"] ?? "";
+
+            // 🌟【最重要のセキュリティ修正：一撃アクセスの許可】
+            // URLの末尾の合言葉がRenderの環境変数と完全に一致している場合は、
+            // セッションログインしていなくても、その場で「本物の管理者だ！」とみなして中へ通します。
+            bool isUrlUnlocked = !string.IsNullOrEmpty(securet) && !string.IsNullOrEmpty(realSecret) && (securet == realSecret);
+            bool isAdmin = (sessionAdmin == "true" || isUrlUnlocked);
+
+            // 🔴 合言葉も合っておらず、セッションログインもしていない本当の一般ユーザーだけを弾く
             if (!isAdmin)
             {
                 return RedirectToAction("Index"); // メニューに戻す
+            }
+
+            // 💡 URLから一度正しい合言葉を受け取っていたら、次回の遷移のためにセッションにも管理者フラグをセットしておく
+            if (isUrlUnlocked)
+            {
+                HttpContext.Session.SetString("IsAdmin", "true");
             }
 
             ViewBag.IsAdmin = true;
             var treeData = new System.Collections.Generic.List<OrgTreeResult>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
 
-            // 2. 💡【Git安全設計】Renderの環境変数から、秘密の鍵を読み込む
-            string realSecret = _configuration["SECRET_KEY"] ?? "";
-
-            // 💡 もしURLから値（securet）が届いていたら、次回の遷移のためにセッションに大切に保管しておく
-            if (!string.IsNullOrEmpty(securet))
-            {
-                HttpContext.Session.SetString("securet_saved", securet);
-            }
-            else
-            {
-                // URLにパラメータがない場合は、前回セッションに保存した値を復元する
-                securet = HttpContext.Session.GetString("securet_saved") ?? "";
-            }
-
-            // 🔒【厳密な答え合わせ】
-            // URL（またはセッション）から届いた securet が、Renderの環境変数「SECRET_KEY（kaitokun0913）」と一致するか判定
-            if (!string.IsNullOrEmpty(securet) && !string.IsNullOrEmpty(realSecret) && (securet == realSecret))
+            // URLの末尾の合位置が一致している場合だけ【本番保存】を許可
+            if (isUrlUnlocked == true && sessionAdmin == "true")
             {
                 ViewBag.IsRealSave = true; // 本番保存モード（管理者専用）
                 ViewData["ModeBadge"] = "🔒 本番データ更新モード（管理者専用）";
@@ -293,7 +197,7 @@ namespace CompanyOrgSystem.Controllers
                 ViewData["ModeBadge"] = "🎮 操作体験デモモード（採用担当者用）";
             }
 
-            // 3. PostgreSQLからデータを取得する（先ほど動いた安心の再帰クエリSQL文）
+            // 3. PostgreSQLからデータを取得する（安心の再帰クエリSQL文）
             string sql = @"
                 WITH RECURSIVE org_chart AS (
                     SELECT 
@@ -353,7 +257,6 @@ namespace CompanyOrgSystem.Controllers
                 return View("~/Views/Home/OrgTreeS.cshtml", treeData);
             }
         }
-
 
         [HttpGet]
         public IActionResult BackToSearch()
