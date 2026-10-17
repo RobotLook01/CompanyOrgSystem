@@ -43,28 +43,70 @@ namespace CompanyOrgSystem.Controllers
 
         // 🔒 ③ 管理者エリアに入るためのパスワードチェック処理
         [HttpPost]
+        // 1. 【ポータルメニューから動くコード】
+        // パスワードを入力してボタンを押した時（POST）に動くアクション
+        [HttpPost]
         public IActionResult AdminLogin(string password)
         {
-            if (password == "admin123")
+            // パスワードが合致しているか検証
+            if (password == "admin123") // あなたの設定している管理者パスワード
             {
-                // 📌 【最重要の修正】ここでセッションに管理者であることを安全に保存します！
-                HttpContext.Session.SetString("IsAdmin", "true");
+                // 💡 認証に成功した証拠（フラグ）をTempDataに保存する（1回だけ有効）
+                TempData["IsAdminAuthenticated"] = true;
 
-
-                // 💡 ログイン直後は、過去の古い検索履歴（キーワード）を一度きれいに消去する
-                HttpContext.Session.Remove("LastKeyword");
-
-
-                ViewBag.IsAdmin = true;
-                var emptyList = new List<EmployeeSearchResult>();
-                return View("~/Views/Home/SearchScreen.cshtml", emptyList);
+                // 秘密の管理者画面（OrgTree）へリダイレクト
+                return RedirectToAction("OrgTree");
             }
-            else
-            {
-                TempData["ErrorMessage"] = "パスワードが正しくありません。";
-                return RedirectToAction("Index");
-            }
+
+            // パスワードが間違っている場合はエラーメッセージを出す
+            TempData["ErrorMessage"] = "パスワードが正しくありません。";
+            return RedirectToAction("Index"); // ポータルメニューに戻す
         }
+
+
+        //public IActionResult AdminLogin(string password)
+        //{
+        //    if (password == "admin123")
+        //    {
+        //        // 📌 【最重要の修正】ここでセッションに管理者であることを安全に保存します！
+        //        HttpContext.Session.SetString("IsAdmin", "true");
+
+
+        //        // 💡 ログイン直後は、過去の古い検索履歴（キーワード）を一度きれいに消去する
+        //        HttpContext.Session.Remove("LastKeyword");
+
+
+        //        ViewBag.IsAdmin = true;
+        //        var emptyList = new List<EmployeeSearchResult>();
+        //        return View("~/Views/Home/SearchScreen.cshtml", emptyList);
+        //    }
+        //    else
+        //    {
+        //        TempData["ErrorMessage"] = "パスワードが正しくありません。";
+        //        return RedirectToAction("Index");
+        //    }
+        //}
+
+        // 2. 【管理者画面（組織図）を表示するコード】
+        // 画面を表示するアクション（GET）
+        [HttpGet]
+        public IActionResult OrgTree()
+        {
+            // 💡 サーバー側で、本物のパスワード認証（AdminLogin）を通ってきたか厳格にチェックする
+            if (TempData["IsAdminAuthenticated"] is bool isAuthenticated && isAuthenticated)
+            {
+                // ----------------------------------------------------
+                // 【合格】本物の管理者なので、画面を表示する
+                // ----------------------------------------------------
+                return View();
+            }
+
+            // ❌【拒否】認証フラグがない場合（URLを手打ちされた、一般画面から遷移してきたなど）
+            // 即座にアクセスを拒否し、エラーメッセージ付きでポータルメニューへ強制送還する
+            TempData["ErrorMessage"] = "管理者用画面へのアクセスにはパスワード認証が必要です。";
+            return RedirectToAction("Index");
+        }
+
 
         // 🔎 ④ 検索実行処理（一般・管理者共通）
         [HttpPost]
