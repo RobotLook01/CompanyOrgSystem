@@ -6,11 +6,21 @@
     ViewData["Title"] = isAdmin ? "【管理者】社員検索" : "【一般】社員検索";
 }
 <script>
-    // 管理者画面が表示された瞬間に実行
-    // ブラウザの履歴スタックにある「この管理者画面のURL（POSTデータ）」を、
-    // 「ポータルメニュー画面のURL」にその場で上書き（置換）します。
-    // ※ '/Home/Index' の部分は、実際のポータルメニュー画面のURLに書き換えてください。
-    history.replaceState(null, '', '/Home/Index');
+    // 💡 対策1：本番環境のURLズレをC#側で自動解決する
+    // 固定文字列ではなく、C#の機能を使って本番環境の正しいメニューURLを自動生成させます
+    var menuUrl = '@Url.Action("Index", "Home")';
+    
+    // 生成された正しいURLで履歴を上書きします
+    history.replaceState(null, '', menuUrl);
+
+    // 💡 対策2：本番サーバー特有の強力なキャッシュ戻りを強制リセットする
+    window.addEventListener('pageshow', function (event) {
+        // もしブラウザがJavaScriptを無視してキャッシュから無理やり管理者画面を表示させたら、
+        // 即座に検知してメニュー画面へ強制リダイレクト（上書き遷移）させます
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            window.location.replace(menuUrl);
+        }
+    });
 </script>
 <div class="container mt-4">
     <!-- 権限によってヘッダーの色と文字を変える -->
