@@ -2,7 +2,13 @@
 @{
     ViewData["Title"] = "組織図ツリー表示";
 }
-
+<script>
+    // 管理者画面が表示された瞬間に実行
+    // ブラウザの履歴スタックにある「この管理者画面のURL（POSTデータ）」を、
+    // 「ポータルメニュー画面のURL」にその場で上書き（置換）します。
+    // ※ '/Home/Index' の部分は、実際のポータルメニュー画面のURLに書き換えてください。
+    history.replaceState(null, '', '/Home/Index');
+</script>
 <div class="container mt-4">
     <div class="card-header bg-success text-white fw-bold">
     <!--div class="p-4 mb-4 bg-yellow text-white rounded-3 shadow-sm"-->

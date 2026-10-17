@@ -5,7 +5,13 @@
     //bool isKeyword = ViewBag.Keyword != null && !string.IsNullOrEmpty(ViewBag.Keyword.ToString());
     ViewData["Title"] = isAdmin ? "【管理者】社員検索" : "【一般】社員検索";
 }
-
+<script>
+    // 管理者画面が表示された瞬間に実行
+    // ブラウザの履歴スタックにある「この管理者画面のURL（POSTデータ）」を、
+    // 「ポータルメニュー画面のURL」にその場で上書き（置換）します。
+    // ※ '/Home/Index' の部分は、実際のポータルメニュー画面のURLに書き換えてください。
+    history.replaceState(null, '', '/Home/Index');
+</script>
 <div class="container mt-4">
     <!-- 権限によってヘッダーの色と文字を変える -->
     <div class="p-4 mb-4 rounded-3 shadow-sm @(isAdmin ? "bg-danger text-white" : "bg-light text-dark")">
