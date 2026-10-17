@@ -4,45 +4,45 @@
     bool isAdmin = ViewBag.IsAdmin ?? false;
     //bool isKeyword = ViewBag.Keyword != null && !string.IsNullOrEmpty(ViewBag.Keyword.ToString());
     ViewData["Title"] = isAdmin ? "【管理者】社員検索" : "【一般】社員検索";
+// @{
+//     ViewData["Title"] = "管理者用画面";
+    // ⚠️ レイアウトは絶対に崩さないよう、自動読み込み（デフォルト）にお任せします
 }
-<!-- 💡 対策1：画面が読み込まれる瞬間、CSSで全体を強制的に非表示（真っ白）にする -->
+
+<!-- 💡 対策1: 画面全体（htmlごと）を、読み込まれた瞬間に最速で「真っ白（非表示）」にする -->
 <style id="security-shield">
-    body { display: none !important; }
+    html, body { display: none !important; visibility: hidden !important; opacity: 0 !important; }
 </style>
 
 <script>
     // 本番環境の正しいメニューURLをC#側で自動解決
     var menuUrl = '@Url.Action("Index", "Home")';
 
-    // 💡 対策2：画面が戻り（BFCacheや長押し戻り）で開かれたかを「超最速」でチェックする関数
-    function checkSecurity() {
-        if (window.performance && window.performance.navigation.type === 2) {
-            // 戻るボタンで来た場合は、画面を見せることなく即座にメニューへ追い出す
-            window.location.replace(menuUrl);
-            return true;
-        }
-        return false;
-    }
-
-    // 最初の読み込み時に最速でチェックを実行
-    if (!checkSecurity()) {
+    // 💡 対策2: 戻るボタンでの再進入（GET）を検知した場合、画面を1ミリも見せず即座にメニューへ追い出す
+    if (window.performance && window.performance.navigation.type === 2) {
+        window.location.replace(menuUrl);
+    } else {
         // 通常のPOST遷移（正当なアクセス）であれば、履歴をメニューに書き換える
         history.replaceState(null, '', menuUrl);
 
-        // 💡 対策3：安全が確認されたので、強制非表示（真っ白）を解除して画面を表示する
-        document.addEventListener("DOMContentLoaded", function() {
-            var shield = document.getElementById("security-shield");
-            if (shield) shield.remove();
-        });
+        // 💡 対策3: 安全が確認されたら、画面全体の非表示（真っ白）を「最速」で解除してデザインを表示する
+        // DOMContentLoadedを待たず、この場で即座にスタイルシートを削除してパッと表示させます
+        var shield = document.getElementById("security-shield");
+        if (shield) {
+            shield.parentNode.removeChild(shield);
+        }
     }
 
-    // 💡 対策4：スマホ特有の強力なキャッシュ戻り（pageshow）も二重でガード
+    // 💡 対策4: スマホ・本番環境の強力なキャッシュ戻り（pageshow）も二重ガード
     window.addEventListener('pageshow', function (event) {
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             window.location.replace(menuUrl);
         }
     });
 </script>
+
+<!-- ここから下に、あなたの元の綺麗なBootstrapのHTML（div等）をそのまま続けてください -->
+
 <div class="container mt-4">
     <!-- 権限によってヘッダーの色と文字を変える -->
     <div class="p-4 mb-4 rounded-3 shadow-sm @(isAdmin ? "bg-danger text-white" : "bg-light text-dark")">
