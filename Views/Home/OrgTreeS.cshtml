@@ -2,18 +2,39 @@
 @{
     ViewData["Title"] = "組織図ツリー表示";
 }
-<script>
-    // 💡 対策1：本番環境のURLズレをC#側で自動解決する
-    // 固定文字列ではなく、C#の機能を使って本番環境の正しいメニューURLを自動生成させます
-    var menuUrl = '@Url.Action("Index", "Home")';
-    
-    // 生成された正しいURLで履歴を上書きします
-    history.replaceState(null, '', menuUrl);
+<!-- 💡 対策1：画面が読み込まれる瞬間、CSSで全体を強制的に非表示（真っ白）にする -->
+<style id="security-shield">
+    body { display: none !important; }
+</style>
 
-    // 💡 対策2：本番サーバー特有の強力なキャッシュ戻りを強制リセットする
+<script>
+    // 本番環境の正しいメニューURLをC#側で自動解決
+    var menuUrl = '@Url.Action("Index", "Home")';
+
+    // 💡 対策2：画面が戻り（BFCacheや長押し戻り）で開かれたかを「超最速」でチェックする関数
+    function checkSecurity() {
+        if (window.performance && window.performance.navigation.type === 2) {
+            // 戻るボタンで来た場合は、画面を見せることなく即座にメニューへ追い出す
+            window.location.replace(menuUrl);
+            return true;
+        }
+        return false;
+    }
+
+    // 最初の読み込み時に最速でチェックを実行
+    if (!checkSecurity()) {
+        // 通常のPOST遷移（正当なアクセス）であれば、履歴をメニューに書き換える
+        history.replaceState(null, '', menuUrl);
+        
+        // 💡 対策3：安全が確認されたので、強制非表示（真っ白）を解除して画面を表示する
+        document.addEventListener("DOMContentLoaded", function() {
+            var shield = document.getElementById("security-shield");
+            if (shield) shield.remove();
+        });
+    }
+
+    // 💡 対策4：スマホ特有の強力なキャッシュ戻り（pageshow）も二重でガード
     window.addEventListener('pageshow', function (event) {
-        // もしブラウザがJavaScriptを無視してキャッシュから無理やり管理者画面を表示させたら、
-        // 即座に検知してメニュー画面へ強制リダイレクト（上書き遷移）させます
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             window.location.replace(menuUrl);
         }
