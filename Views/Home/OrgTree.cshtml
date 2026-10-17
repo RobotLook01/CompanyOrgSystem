@@ -1,0 +1,167 @@
+﻿@model IEnumerable<CompanyOrgSystem.Models.OrgTreeResult>
+@{
+    ViewData["Title"] = "組織図ツリー総合管理";
+}
+
+<!-- 🎨 必要な外部スタイルシート（アイコン用） -->
+<link rel="stylesheet" href="https://jsdelivr.net">
+
+<div class="container mt-4 mb-5">
+    <!-- 🏢 ヘッダーエリア -->
+    <div class="card-header bg-success text-white fw-bold">
+    <!--div class="p-4 mb-4 bg-yellow text-white rounded-3 shadow-sm d-flex justify-content-between align-items-center"-->
+        <div>
+            <h2 class="fw-bold m-0">🌳 企業組織図マスターツリー [管理者モード]</h2>
+            <p class="m-0 fs-6 text-muted mt-1">Npgsqlによる即時コミット処理と、PostgreSQLの再帰クエリが100%リアルタイムに完全連動しています。</p>
+        </div>
+        <div>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light fw-bold">◀ メニューに戻る</a>
+            <a asp-controller="Home" asp-action="BackToSearch" class="btn btn-outline-light fw-bold">◀ 検索画面に戻る</a>
+        </div>
+    </!--div>
+
+    <!-- 💡 操作ヘルプバッジ -->
+    <div class="alert alert-info shadow-sm mb-4 d-flex justify-content-between align-items-center py-2">
+        <span class="fs-6">
+            <i class="bi bi-info-circle-fill me-1"></i> 各部署の右側にあるリモコンボタン（矢印）を押すと、データベースが**その場で安全に即時コミット**されます。
+        </span>
+        <span class="badge bg-danger p-2 shadow-sm"><i class="bi bi-shield-lock-fill"></i> 管理者専用ガード稼働中</span>
+    </div>
+
+
+    <!-- ➕ 【新規組織の追加フォーム】カードの直前などに配置してください -->
+    <div class="card shadow-sm mb-4 border-success">
+        <div class="card-header bg-success text-white fw-bold">
+            <i class="bi bi-folder-plus me-1"></i> ➕ 新しい組織（部署）を新規登録する
+        </div>
+        <div class="card-body bg-white p-3">
+            <form asp-controller="Home" asp-action="AddDepartment" method="post" class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light fw-bold">組織（部署）名</span>
+                        <input type="text" name="departmentName" class="form-control" placeholder="例：営業3課" required />
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light fw-bold">所属する親組織</span>
+                        <select name="parentId" class="form-select">
+                            <option value="">（最上位の組織として登録）</option>
+                            @if (Model != null)
+                            {
+                                @foreach (var dept in Model)
+                                {
+                                    <option value="@dept.DepartmentId">@string.Concat(Enumerable.Repeat("　", dept.Level - 1)) @dept.DepartmentName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success btn-sm w-100 fw-bold shadow-sm">
+                        <i class="bi bi-plus-lg me-1"></i> 新規登録
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- 🌳 ツリー形式のカードデザイン -->
+    <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
+            <span>🏢 株式会社組織 ネットワーク階層構造</span>
+            <span class="badge bg-white text-danger font-monospace">データ件数: @(Model?.Count() ?? 0) 件</span>
+        </div>
+        <div class="card-body bg-light p-4">
+            <div class="list-group">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var org in Model)
+                    {
+                        // 階層の深さ（Level）に応じて、左側に空白（インデント）を自動計算
+                        var paddingLeft = (org.Level - 1) * 2.5;
+
+                        <div class="list-group-item list-group-item-action d-flex align-items-center justify-content-between border-0 rounded my-1 shadow-sm bg-white p-3"
+                             style="margin-left: @(paddingLeft)rem;">
+
+                            <!-- 📁 左側：組織名と階層表示 -->
+                            <div class="d-flex align-items-center">
+                                <span class="fs-3 me-2">
+                                    @if (org.Level == 1)
+                                    {
+                                        <text>🏢</text>
+                                    }
+                                    else if (org.Level == 2)
+                                    {
+
+                                        <text>📁</text>
+                                    }
+                                    else
+                                    {
+
+                                        <text>📄</text>
+                                    }
+                                </span>
+                                <div>
+                                    <span class="fw-bold fs-5 @(org.Level == 1 ? "text-danger" : org.Level == 2 ? "text-primary" : "text-dark")">
+                                        @org.DepartmentName
+                                    </span>
+                                    <span class="badge bg-secondary ms-2 opacity-75">レベル @org.Level</span>
+                                    <div class="small text-muted font-monospace mt-1" style="font-size: 0.75rem;">内部パス: @org.Path</div>
+                                </div>
+                            </div>
+
+                            <!-- 🛠️ 右側：直感操作リモコン（C#ロジックと1対1で繋がるボタン） -->
+                            <div class="d-flex align-items-center">
+
+                                <!-- ✍️ 簡易名前変更フォーム -->
+                                <form asp-controller="Home" asp-action="RenameDepartment" method="post" class="d-flex me-3">
+                                    <input type="hidden" name="id" value="@org.DepartmentId" />
+                                    <input type="text" name="newName" class="form-control form-control-sm me-1" style="width: 130px;" placeholder="新しい名前を入力" required />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="名前を変更"><i class="bi bi-pencil"></i></button>
+                                </form>
+
+                                <!-- 🎛️ 位置・階層コントロールボタン群 -->
+                                <div class="btn-group shadow-sm">
+                                    <!-- 1. 上下の並び順をトレード変更 -->
+                                    <a asp-controller="Home" asp-action="MoveOrder" asp-route-id="@org.DepartmentId" asp-route-direction="up" class="btn btn-sm btn-outline-secondary fw-bold" title="同一階層内で上へ移動">
+                                        <i class="bi bi-chevron-up"></i> ▲
+                                    </a>
+                                    <a asp-controller="Home" asp-action="MoveOrder" asp-route-id="@org.DepartmentId" asp-route-direction="down" class="btn btn-sm btn-outline-secondary fw-bold" title="同一階層内で下へ移動">
+                                        <i class="bi bi-chevron-down"></i> ▼
+                                    </a>
+
+                                    <!-- 2. 階層の深さ（親子関係）を変更 -->
+                                    <a asp-controller="Home" asp-action="MakeDeeper" asp-route-id="@org.DepartmentId" class="btn btn-sm btn-outline-success font-monospace" title="上の部署の配下に潜り込む（右シフト）">
+                                        <i class="bi bi-arrow-right"></i> ➕深く
+                                    </a>
+                                    <a asp-controller="Home" asp-action="MakeShallower" asp-route-id="@org.DepartmentId" class="btn btn-sm btn-outline-warning font-monospace" title="親から独立して1段階浅く（左シフト）">
+                                        <i class="bi bi-arrow-left"></i> ➖浅く
+                                    </a>
+
+                                    <!-- 3. 論理削除ボタン（社員がいる場合はC#側で安全にブロックします） -->
+                                    <!--a asp-controller="Home" asp-action="DeleteDepartment" asp-route-id="@org.DepartmentId" class="btn btn-sm btn-danger text-white px-3" onclick="return confirm('「@org.DepartmentName」を非活性（論理削除）にしますか？\n所属社員がいる場合は安全ロックが走ります。');" title="組織の論理削除"-->
+                                    <!-- ❌ 安全を期して、一時的に通常のボタンとして配置。アクションを繋ぐ場合は上記を有効化してください -->
+                                    <button type="button" class="btn btn-sm btn-danger text-white px-2" onclick="alert('論理削除の安全ロック検証：ここに所属社員（belongs）が残っている場合は、C#側が自動検知してデータベース整合性をガチガチに保護します。');">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted bg-white border rounded">
+                        <i class="bi bi-folder-x display-4 text-opacity-25 text-secondary"></i>
+                        <p class="mt-2 m-0">組織データ（有効なもの）が存在しません。PostgreSQLの状態を確認してください。</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
