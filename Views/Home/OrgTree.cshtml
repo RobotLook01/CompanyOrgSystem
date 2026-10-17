@@ -1,48 +1,38 @@
 ﻿@model IEnumerable<CompanyOrgSystem.Models.OrgTreeResult>
 @{
     ViewData["Title"] = "組織図ツリー総合管理";
-// @{
-//     ViewData["Title"] = "管理者用画面";
-    // ⚠️ レイアウトは絶対に崩さないよう、自動読み込み（デフォルト）にお任せします
 }
-
-<!-- 💡 対策1: 画面全体（htmlごと）を、読み込まれた瞬間に最速で「真っ白（非表示）」にする -->
-<style id="security-shield">
-    html, body { display: none !important; visibility: hidden !important; opacity: 0 !important; }
-</style>
-
+<!-- 💡 ここから追加（ローカルでも本番でも100%動く超シンプル版） -->
 <script>
-    // 本番環境の正しいメニューURLをC#側で自動解決
-    var menuUrl = '@Url.Action("Index", "Home")';
+    (function () {
+        // C#の機能を使って、どこにいても正しいメニュー画面のURL（/Home/Index など）を自動計算する
+        var menuUrl = '@Url.Action("Index", "Home")';
 
-    // 💡 対策2: 戻るボタンでの再進入（GET）を検知した場合、画面を1ミリも見せず即座にメニューへ追い出す
-    if (window.performance && window.performance.navigation.type === 2) {
-        window.location.replace(menuUrl);
-    } else {
-        // 通常のPOST遷移（正当なアクセス）であれば、履歴をメニューに書き換える
+        // 1. 画面が表示される瞬間に、履歴を「管理者画面」から「メニュー画面」にすり替える
         history.replaceState(null, '', menuUrl);
 
-        // 💡 対策3: 安全が確認されたら、画面全体の非表示（真っ白）を「最速」で解除してデザインを表示する
-        // DOMContentLoadedを待たず、この場で即座にスタイルシートを削除してパッと表示させます
-        var shield = document.getElementById("security-shield");
-        if (shield) {
-            shield.parentNode.removeChild(shield);
-        }
-    }
-
-    // 💡 対策4: スマホ・本番環境の強力なキャッシュ戻り（pageshow）も二重ガード
-    window.addEventListener('pageshow', function (event) {
-        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            window.location.replace(menuUrl);
-        }
-    });
+        // 2. 【超重要】もし「戻るボタン」でこのURL（管理者画面）に再進入してきたら
+        window.addEventListener('pageshow', function (event) {
+            // キャッシュからの復元、または戻る移動（type === 2）を検知した場合
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                // ユーザーが何かを見る前に、最速でメニュー画面へ追い出す
+                window.location.replace(menuUrl);
+            }
+        });
+    })();
 </script>
+<!-- 💡 ここまで追加 -->
+<!-- 💡 対策1: 画面全体（htmlごと）を、読み込まれた瞬間に最速で「真っ白（非表示）」にする -->
+<!--style id="security-shield">
+    html, body { display: none !important; visibility: hidden !important; opacity: 0 !important; }
+</style-->
 
 <!-- ここから下に、あなたの元の綺麗なBootstrapのHTML（div等）をそのまま続けてください -->
 <link rel="stylesheet" href="https://jsdelivr.net">
 
 <div class="container mt-4 mb-5">
     <!-- 🏢 ヘッダーエリア -->
+    <!--div id="admin-main-card" class="card text-white" style="background-color: transparent; transition: background-color 0.1s;"-->
     <div class="card-header bg-success text-white fw-bold">
     <!--div class="p-4 mb-4 bg-yellow text-white rounded-3 shadow-sm d-flex justify-content-between align-items-center"-->
         <div>
@@ -53,9 +43,7 @@
             <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light fw-bold">◀ メニューに戻る</a>
             <a asp-controller="Home" asp-action="BackToSearch" class="btn btn-outline-light fw-bold">◀ 検索画面に戻る</a>
         </div>
-    </!--div>
-
-    <!-- 💡 操作ヘルプバッジ -->
+    </div>
     <div class="alert alert-info shadow-sm mb-4 d-flex justify-content-between align-items-center py-2">
         <span class="fs-6">
             <i class="bi bi-info-circle-fill me-1"></i> 各部署の右側にあるリモコンボタン（矢印）を押すと、データベースが**その場で安全に即時コミット**されます。
