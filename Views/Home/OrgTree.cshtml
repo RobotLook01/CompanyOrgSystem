@@ -2,37 +2,18 @@
 @{
     ViewData["Title"] = "組織図ツリー総合管理";
 }
-<!-- 💡 ここから追加（ローカルでも本番でも100%動く超シンプル版） -->
 <script>
-    (function () {
-        // C#の機能を使って、どこにいても正しいメニュー画面のURL（/Home/Index など）を自動計算する
-        var menuUrl = '@Url.Action("Index", "Home")';
-
-        // 1. 画面が表示される瞬間に、履歴を「管理者画面」から「メニュー画面」にすり替える
-        history.replaceState(null, '', menuUrl);
-
-        // 2. 【超重要】もし「戻るボタン」でこのURL（管理者画面）に再進入してきたら
-        window.addEventListener('pageshow', function (event) {
-            // キャッシュからの復元、または戻る移動（type === 2）を検知した場合
-            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                // ユーザーが何かを見る前に、最速でメニュー画面へ追い出す
-                window.location.replace(menuUrl);
-            }
-        });
-    })();
+    // 管理者画面が表示された瞬間に実行
+    // ブラウザの履歴スタックにある「この管理者画面のURL（POSTデータ）」を、
+    // 「ポータルメニュー画面のURL」にその場で上書き（置換）します。
+    // ※ '/Home/Index' の部分は、実際のポータルメニュー画面のURLに書き換えてください。
+    history.replaceState(null, '', '/Home/Index');
 </script>
-<!-- 💡 ここまで追加 -->
-<!-- 💡 対策1: 画面全体（htmlごと）を、読み込まれた瞬間に最速で「真っ白（非表示）」にする -->
-<!--style id="security-shield">
-    html, body { display: none !important; visibility: hidden !important; opacity: 0 !important; }
-</style-->
-
-<!-- ここから下に、あなたの元の綺麗なBootstrapのHTML（div等）をそのまま続けてください -->
+<!-- 🎨 必要な外部スタイルシート（アイコン用） -->
 <link rel="stylesheet" href="https://jsdelivr.net">
 
 <div class="container mt-4 mb-5">
     <!-- 🏢 ヘッダーエリア -->
-    <!--div id="admin-main-card" class="card text-white" style="background-color: transparent; transition: background-color 0.1s;"-->
     <div class="card-header bg-success text-white fw-bold">
     <!--div class="p-4 mb-4 bg-yellow text-white rounded-3 shadow-sm d-flex justify-content-between align-items-center"-->
         <div>
@@ -43,7 +24,9 @@
             <a asp-controller="Home" asp-action="Index" class="btn btn-outline-light fw-bold">◀ メニューに戻る</a>
             <a asp-controller="Home" asp-action="BackToSearch" class="btn btn-outline-light fw-bold">◀ 検索画面に戻る</a>
         </div>
-    </div>
+    </!--div>
+
+    <!-- 💡 操作ヘルプバッジ -->
     <div class="alert alert-info shadow-sm mb-4 d-flex justify-content-between align-items-center py-2">
         <span class="fs-6">
             <i class="bi bi-info-circle-fill me-1"></i> 各部署の右側にあるリモコンボタン（矢印）を押すと、データベースが**その場で安全に即時コミット**されます。
