@@ -2,43 +2,36 @@
 @{
     ViewData["Title"] = "組織図ツリー表示";
 }
-<!-- 💡 ここから追加（ローカルでも本番でも100%動く超シンプル版） -->
 <script>
-    (function () {
-        // C#の機能を使って、どこにいても正しいメニュー画面のURL（/Home/Index など）を自動計算する
-        var menuUrl = '@Url.Action("Index", "Home")';
+    // 💡 対策1：本番環境のURLズレをC#側で自動解決する
+    // 固定文字列ではなく、C#の機能を使って本番環境の正しいメニューURLを自動生成させます
+    var menuUrl = '@Url.Action("Index", "Home")';
+    
+    // 生成された正しいURLで履歴を上書きします
+    history.replaceState(null, '', menuUrl);
 
-        // 1. 画面が表示される瞬間に、履歴を「管理者画面」から「メニュー画面」にすり替える
-        history.replaceState(null, '', menuUrl);
-
-        // 2. 【超重要】もし「戻るボタン」でこのURL（管理者画面）に再進入してきたら
-        window.addEventListener('pageshow', function (event) {
-            // キャッシュからの復元、または戻る移動（type === 2）を検知した場合
-            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                // ユーザーが何かを見る前に、最速でメニュー画面へ追い出す
-                window.location.replace(menuUrl);
-            }
-        });
-    })();
+    // 💡 対策2：本番サーバー特有の強力なキャッシュ戻りを強制リセットする
+    window.addEventListener('pageshow', function (event) {
+        // もしブラウザがJavaScriptを無視してキャッシュから無理やり管理者画面を表示させたら、
+        // 即座に検知してメニュー画面へ強制リダイレクト（上書き遷移）させます
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            window.location.replace(menuUrl);
+        }
+    });
 </script>
-<!-- 💡 ここまで追加 -->
-<!-- 💡 対策1: 画面全体（htmlごと）を、読み込まれた瞬間に最速で「真っ白（非表示）」にする -->
-<!--style id="security-shield">
-    html, body { display: none !important; visibility: hidden !important; opacity: 0 !important; }
-</style-->
-
-<!-- ここから下に、あなたの元の綺麗なBootstrapのHTML（div等）をそのまま続けてください -->
 <div class="container mt-4">
     <div class="card-header bg-success text-white fw-bold">
     <!--div class="p-4 mb-4 bg-yellow text-white rounded-3 shadow-sm"-->
         <h2 class="fw-bold">🌳 企業組織図マスターツリー [管理者モード]デモ画面</h2>
         <p class="m-0 fs-6 text-muted">データベース（ぽすぐれ）の再帰クエリを用いて、現在の全階層構造をリアルタイムに自動追跡・視覚化しています。</p>
     </div>
+
     <div class="d-flex justify-content-between align-items-center my-3">
         <h4 class="fw-bold text-secondary">📋 現在の組織階層一覧</h4>
         <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary fw-bold">◀ メニューに戻る</a>
         <a asp-controller="Home" asp-action="BackToSearch" class="btn btn-outline-secondary fw-bold">◀ 管理画面に戻る</a>
     </div>
+
     <!-- 🌳 ツリー形式のカードデザイン -->
     <div class="card shadow-sm border-danger">
         <div class="card-header bg-danger text-white fw-bold">

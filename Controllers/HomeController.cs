@@ -37,48 +37,55 @@ namespace CompanyOrgSystem.Controllers
         // 👥 ② 一般ユーザー向けの検索画面（初期表示）
         public IActionResult GeneralSearch()
         {
+            // 💡 一般ユーザーとして検索画面を開くときは、セッションに「管理者ではない」ことを明示的に保存しておく
+            HttpContext.Session.SetString("IsAdmin", "false");
+            ViewBag.IsAdmin = false;
+
             var emptyList = new List<EmployeeSearchResult>();
             return View("~/Views/Home/SearchScreen.cshtml", emptyList);
         }
 
         // 🔒 ③ 管理者エリアに入るためのパスワードチェック処理
         [HttpPost]
-        // 1. 【ポータルメニューから動くコード】
-        // パスワードを入力してボタンを押した時（POST）に動くアクション
-        [HttpPost]
         public IActionResult AdminLogin(string password)
         {
-            // パスワードが合致しているか検証
-            if (password == "admin123") // あなたの設定している管理者パスワード
+            if (password == "admin123")
             {
-                // 💡 認証に成功した証拠（フラグ）をTempDataに保存する（1回だけ有効）
-                TempData["IsAdminAuthenticated"] = true;
+                // 📌 【最重要の修正】ここでセッションに管理者であることを安全に保存します！
+                HttpContext.Session.SetString("IsAdmin", "true");
+                ViewBag.IsAdmin = true;
 
-                // 秘密の管理者画面（OrgTree）へリダイレクト
-                return RedirectToAction("OrgTree");
+                // 💡 ログイン直後は、過去の古い検索履歴（キーワード）を一度きれいに消去する
+                HttpContext.Session.Remove("LastKeyword");
+
+                var emptyList = new List<EmployeeSearchResult>();
+                return View("~/Views/Home/SearchScreen.cshtml", emptyList);
             }
-
-            // パスワードが間違っている場合はエラーメッセージを出す
-            TempData["ErrorMessage"] = "パスワードが正しくありません。";
-            return RedirectToAction("Index"); // ポータルメニューに戻す
+            else
+            {
+                TempData["ErrorMessage"] = "パスワードが正しくありません。";
+                return RedirectToAction("Index");
+            }
         }
 
-
+        //// 🔒 ③ 管理者エリアに入るためのパスワードチェック処理
         //public IActionResult AdminLogin(string password)
         //{
         //    if (password == "admin123")
         //    {
         //        // 📌 【最重要の修正】ここでセッションに管理者であることを安全に保存します！
         //        HttpContext.Session.SetString("IsAdmin", "true");
-
+        //        ViewBag.IsAdmin = true;
 
         //        // 💡 ログイン直後は、過去の古い検索履歴（キーワード）を一度きれいに消去する
         //        HttpContext.Session.Remove("LastKeyword");
 
-
-        //        ViewBag.IsAdmin = true;
-        //        var emptyList = new List<EmployeeSearchResult>();
-        //        return View("~/Views/Home/SearchScreen.cshtml", emptyList);
+        //        // ====================================================
+        //        // 💡【ここを修正！】直接 View を返さず、GETリクエストへリダイレクトする
+        //        // ====================================================
+        //        // ※ 通常の検索画面を表示するアクション（例: GeneralSearch や SearchScreen など、
+        //        // あなたのプロジェクトでこの SearchScreen.cshtml を通常開く際のアクション名に指定してください）
+        //        return RedirectToAction("GeneralSearch", new { isAdmin = "true" });
         //    }
         //    else
         //    {
@@ -86,26 +93,6 @@ namespace CompanyOrgSystem.Controllers
         //        return RedirectToAction("Index");
         //    }
         //}
-
-        // 2. 【管理者画面（組織図）を表示するコード】
-        // 画面を表示するアクション（GET）
-        [HttpGet]
-        public IActionResult OrgTree()
-        {
-            // 💡 サーバー側で、本物のパスワード認証（AdminLogin）を通ってきたか厳格にチェックする
-            if (TempData["IsAdminAuthenticated"] is bool isAuthenticated && isAuthenticated)
-            {
-                // ----------------------------------------------------
-                // 【合格】本物の管理者なので、画面を表示する
-                // ----------------------------------------------------
-                return View();
-            }
-
-            // ❌【拒否】認証フラグがない場合（URLを手打ちされた、一般画面から遷移してきたなど）
-            // 即座にアクセスを拒否し、エラーメッセージ付きでポータルメニューへ強制送還する
-            TempData["ErrorMessage"] = "管理者用画面へのアクセスにはパスワード認証が必要です。";
-            return RedirectToAction("Index");
-        }
 
 
         // 🔎 ④ 検索実行処理（一般・管理者共通）
@@ -208,21 +195,24 @@ namespace CompanyOrgSystem.Controllers
             // 🌟【最重要のセキュリティ修正：一撃アクセスの許可】
             // URLの末尾の合言葉がRenderの環境変数と完全に一致している場合は、
             // セッションログインしていなくても、その場で「本物の管理者だ！」とみなして中へ通します。
-            bool isUrlUnlocked = !string.IsNullOrEmpty(securet) && !string.IsNullOrEmpty(realSecret) && (securet == realSecret);
-            bool isAdmin = (sessionAdmin == "true" || isUrlUnlocked);
+            bool isUrlUnlocked = (!string.IsNullOrEmpty(securet) && !string.IsNullOrEmpty(realSecret)) && (securet == realSecret);
+            //bool isAdmin = (sessionAdmin == "true" || isUrlUnlocked);
+            bool isAdmin = (sessionAdmin == "true" || isUrlUnlocked == true);
 
             // 🔴 合言葉も合っておらず、セッションログインもしていない本当の一般ユーザーだけを弾く
-            if (!isAdmin)
+            // セッションログインしていなければ、メニューに戻す
+            if (sessionAdmin != "true")
             {
                 return RedirectToAction("Index"); // メニューに戻す
             }
 
             // 💡 URLから一度正しい合言葉を受け取っていたら、次回の遷移のためにセッションにも管理者フラグをセットしておく
-            if (isUrlUnlocked)
-            {
-                HttpContext.Session.SetString("IsAdmin", "true");
-            }
-
+            //if (isUrlUnlocked == true)
+            //{
+            //    HttpContext.Session.SetString("IsAdmin", "true");
+            //}
+            // セッションログインしていれば、次回の遷移のためにセッションにも管理者フラグをセットしておく
+            HttpContext.Session.SetString("IsAdmin", "true");
             ViewBag.IsAdmin = true;
             var treeData = new System.Collections.Generic.List<OrgTreeResult>();
             string connectionString = _configuration.GetConnectionString("DefaultConnection") ?? "";
@@ -679,4 +669,3 @@ namespace CompanyOrgSystem.Controllers
 
     }
 }
-

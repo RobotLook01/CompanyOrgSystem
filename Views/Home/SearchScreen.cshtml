@@ -1,51 +1,22 @@
 ﻿@model IEnumerable<CompanyOrgSystem.Models.EmployeeSearchResult>
+
 @{
     bool isAdmin = ViewBag.IsAdmin ?? false;
     //bool isKeyword = ViewBag.Keyword != null && !string.IsNullOrEmpty(ViewBag.Keyword.ToString());
     ViewData["Title"] = isAdmin ? "【管理者】社員検索" : "【一般】社員検索";
 }
 
-<!-- 💡 ここから追加（ローカルでも本番でも100%動く超シンプル版） -->
-<script>
-    (function () {
-        // C#の機能を使って、どこにいても正しいメニュー画面のURL（/Home/Index など）を自動計算する
-        var menuUrl = '@Url.Action("Index", "Home")';
-
-        // 1. 画面が表示される瞬間に、履歴を「管理者画面」から「メニュー画面」にすり替える
-        history.replaceState(null, '', menuUrl);
-
-        // 2. 【超重要】もし「戻るボタン」でこのURL（管理者画面）に再進入してきたら
-        window.addEventListener('pageshow', function (event) {
-            // キャッシュからの復元、または戻る移動（type === 2）を検知した場合
-            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-                // ユーザーが何かを見る前に、最速でメニュー画面へ追い出す
-                window.location.replace(menuUrl);
-            }
-        });
-    })();
-</script>
-<!-- 💡 ここまで追加 -->
-<!-- この下は、あなたの元の綺麗なBootstrapのHTML（div等）をそのまま続けてください -->
-
-<!-- 💡 対策1: 画面全体（htmlごと）を、読み込まれた瞬間に最速で「真っ白（非表示）」にする -->
-<!--style id="security-shield">
-    html, body { display: none !important; visibility: hidden !important; opacity: 0 !important; }
-</style-->
-
-<!-- ここから下に、あなたの元の綺麗なBootstrapのHTML（div等）をそのまま続けてください -->
-
 <div class="container mt-4">
     <!-- 権限によってヘッダーの色と文字を変える -->
     <div class="p-4 mb-4 rounded-3 shadow-sm @(isAdmin ? "bg-danger text-white" : "bg-light text-dark")">
-    <!--div id="admin-main-card" class="card text-white" style="background-color: transparent; transition: background-color 0.1s;"-->
-    <!--div id="admin-main-card" class="card text-white" style="background-color: transparent; transition: background-color 0.1s;"-->
         <h2 class="fw-bold">
-            @(isAdmin ? "🔒 人事管理システム [管理者専用モード]デモ画面" : "👤 人事管理システム [一般ユーザーモード]")
+            @(isAdmin ? "🔒 人事管理システム [管理者専用モード]" : "👤 人事管理システム [一般ユーザーモード]")
         </h2>
         <p class="m-0 fs-6">
             @(isAdmin ? "すべての社員の所属・兼務情報、および管理者用権限での閲覧が可能です。" : "社員名から所属している組織の一覧を検索できます。")
         </p>
     </div>
+
     <!-- 🔍 検索フォーム -->
     <form asp-controller="Home" asp-action="DoSearch" method="post" class="row g-3 my-4 bg-white p-3 border rounded shadow-sm">
         <input type="hidden" name="isAdmin" value="@isAdmin.ToString().ToLower()" />
