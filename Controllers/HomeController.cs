@@ -84,11 +84,8 @@ namespace CompanyOrgSystem.Controllers
         //        // 💡【ここを修正！】直接 View を返さず、GETリクエストへリダイレクトする
         //        // ====================================================
         //        // ※ 通常の検索画面を表示するアクション（例: GeneralSearch や SearchScreen など、
-<<<<<<< HEAD
         //        //プロジェクトでこの SearchScreen.cshtml を通常開く際のアクション名に指定してください）
-=======
         //        // あなたのプロジェクトでこの SearchScreen.cshtml を通常開く際のアクション名に指定してください）
->>>>>>> 2066cb9ac3a8c0691519ea4eca09c22c7d1f0f0e
         //        return RedirectToAction("GeneralSearch", new { isAdmin = "true" });
         //    }
         //    else
