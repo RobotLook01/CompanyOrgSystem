@@ -2,14 +2,14 @@
 FROM public.ecr.aws/sam/build-dotnet8:latest AS build-env
 WORKDIR /app
 
-# 【重要】C#側だけでなく、お隣にある「ChatLogic」のフォルダ構造もまとめてコンパイル環境に再現します
+# プロジェクトの構成ファイルをコピー
 COPY *.sln ./
 COPY *.slnx ./
 COPY *.csproj ./
 COPY ../ChatLogic/ChatLogic.vbproj /ChatLogic/
 
-# ソリューションを指定して依存関係を復元
-RUN dotnet restore CompanyOrgSystem.slnx
+# 【修正箇所】.slnxではなく、C#のプロジェクトファイルを直接指定して依存関係を復元します
+RUN dotnet restore CompanyOrgSystem.csproj
 
 # すべてのソースコード（C#）とお隣のソースコード（VB.NET）をまとめてコピー
 COPY . ./
