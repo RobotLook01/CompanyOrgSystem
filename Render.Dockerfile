@@ -2,10 +2,12 @@
 FROM public.ecr.aws/sam/build-dotnet8:latest AS build-env
 WORKDIR /app
 
-# ソリューションファイルと、各プロジェクトの構造を正確にコピーして復元
-# ※VB.NETのフォルダ名は実際の名称（例: VbLibraryProject など）に書き換えてください。
+# ソリューションファイルと、ルート直下にあるC#プロジェクトファイルをコピー
 COPY *.sln ./
-COPY CompanyOrgSystem/*.csproj ./CompanyOrgSystem/
+COPY *.slnx ./
+COPY *.csproj ./
+
+# 独立して配置されているVB.NET（ChatLogic）の構造を正確にコピー
 COPY ChatLogic/*.vbproj ./ChatLogic/
 
 # ソリューション全体（C#とVB.NETの両方）の依存関係を復元
@@ -13,7 +15,7 @@ RUN dotnet restore
 
 # すべてのソースコードをコピーしてビルド・パブリッシュ
 COPY . ./
-RUN dotnet publish CompanyOrgSystem/CompanyOrgSystem.csproj -c Release -o out
+RUN dotnet publish CompanyOrgSystem.csproj -c Release -o out
 
 # 2. 実行用の環境（AWS公式パブリックレジストリから.NET 8.0 ランタイム環境を取得）
 FROM public.ecr.aws/sam/build-dotnet8:latest
