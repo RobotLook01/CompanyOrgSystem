@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<RootNamespace>ChatLogic</RootNamespace>
+		<OptionStrict>Off</OptionStrict>
+		<OptionInfer>On</OptionInfer>
+		<UserSecretsId>aa8627a9-f8fa-4898-bc33-aba114a3f931</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerfileContext>.</DockerfileContext>
+	</PropertyGroup>
+
+	<!-- ★ここが最重要！PostgreSQLやDapper、マークダウンのライブラリを確実に読み込ませます -->
+	<ItemGroup>
+		<PackageReference Include="Dapper" Version="2.1.35" />
+		<PackageReference Include="Npgsql" Version="8.0.3" />
+		<PackageReference Include="Markdig" Version="0.37.0" />
+	</ItemGroup>
+
+</Project>

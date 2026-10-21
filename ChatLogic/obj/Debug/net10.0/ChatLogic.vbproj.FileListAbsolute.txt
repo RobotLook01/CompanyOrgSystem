@@ -1,0 +1,7 @@
+C:\Users\User\source\repos\ChatLogic\obj\Debug\net10.0\ChatLogic.vbproj.AssemblyReference.cache
+C:\Users\User\source\repos\ChatLogic\obj\Debug\net10.0\ChatLogic.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\User\source\repos\ChatLogic\obj\Debug\net10.0\ChatLogic.AssemblyInfoInputs.cache
+C:\Users\User\source\repos\ChatLogic\obj\Debug\net10.0\ChatLogic.AssemblyInfo.vb
+C:\Users\User\source\repos\ChatLogic\obj\Debug\net10.0\ChatLogic.vbproj.CoreCompileInputs.cache
+C:\Users\User\source\repos\ChatLogic\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\User\source\repos\ChatLogic\obj\Debug\net10.0\ChatLogic.MvcApplicationPartsAssemblyInfo.cache
