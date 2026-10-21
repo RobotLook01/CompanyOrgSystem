@@ -7,13 +7,11 @@ COPY *.sln ./
 COPY *.slnx ./
 COPY *.csproj ./
 
-# 独立して配置されているVB.NET（ChatLogic）の構造を正確にコピー
-#COPY ChatLogic/*.vbproj ./ChatLogic/
-# フォルダ名の大文字小文字に依存せず、すべての .vbproj を一括でコピー環境へ配置します
-COPY */*.vbproj ./
+# 完璧にアップロードされたChatLogic（VB.NET）の構造を正確にコピー
+COPY ChatLogic/*.vbproj ./ChatLogic/
 
-# ソリューション全体（C#とVB.NETの両方）の依存関係を復元
-RUN dotnet restore
+# 【修正箇所】迷わないように明確にソリューションファイルを指定して依存関係を復元
+RUN dotnet restore CompanyOrgSystem.slnx
 
 # すべてのソースコードをコピーしてビルド・パブリッシュ
 COPY . ./
