@@ -1,31 +1,28 @@
 # 1. ビルド用の環境（AWS公式パブリックレジストリから.NET 8.0 SDKを取得）
 FROM public.ecr.aws/sam/build-dotnet8:latest AS build-env
+WORKDIR /src
 
-# メインプロジェクトは /app/CompanyOrgSystem に配置して、ローカルと同じ位置関係にする
-WORKDIR /app/CompanyOrgSystem
+# ソリューション内のすべてのプロジェクトファイル（.csproj, .vbproj）を階層構造を維持して一括コピー
+COPY CompanyOrgSystem.sln ./
+COPY *.slnx ./
+COPY CompanyOrgSystem/*.csproj ./CompanyOrgSystem/
+COPY ChatLogic/*.vbproj ./ChatLogic/
+COPY ProductService/*.vbproj ./ProductService/
 
-# プロジェクトの構成ファイルをそれぞれの正しいフォルダにコピー
-COPY CompanyOrgSystem.csproj ./
-COPY ../ChatLogic/ChatLogic.vbproj /app/ChatLogic/
-# ★大文字・小文字（ProductService）を完全に統一
-COPY ../ProductService/ProductService.vbproj /app/ProductService/
+# 依存関係の復元
+RUN dotnet restore "CompanyOrgSystem/CompanyOrgSystem.csproj"
 
-# C#のプロジェクトファイルを直接指定して依存関係を復元
-RUN dotnet restore CompanyOrgSystem.csproj
+# すべてのソースコードを一括でコピー
+COPY . .
 
-# すべてのソースコードを、ローカルと同じ階層構造（並び順）になるようにコピー
-COPY . ./
-COPY ../ChatLogic/ /app/ChatLogic/
-# ★大文字・小文字（ProductService）を完全に統一
-COPY ../ProductService/ /app/ProductService/
-
-# 【超重要】重複ファイルによる衝突エラーを完全に無視する魔法のオプション（-p:ErrorOnDuplicatePublishOutputFiles=false）を追記
-RUN dotnet publish CompanyOrgSystem.csproj -c Release -o out -p:ErrorOnDuplicatePublishOutputFiles=false
+# メインプロジェクトのビルドおよび発行（成果物を /app に出力）
+WORKDIR /src/CompanyOrgSystem
+RUN dotnet publish CompanyOrgSystem.csproj -c Release -o /app -p:ErrorOnDuplicatePublishOutputFiles=false
 
 # 2. 実行用の環境
 FROM public.ecr.aws/sam/build-dotnet8:latest
 WORKDIR /app
-COPY --from=build-env /app/CompanyOrgSystem/out .
+COPY --from=build-env /app .
 
 ENV ASPNETCORE_URLS=http://+:10000
 ENTRYPOINT ["dotnet", "CompanyOrgSystem.dll"]
