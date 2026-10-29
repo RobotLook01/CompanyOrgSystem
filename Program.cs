@@ -2,7 +2,6 @@ using System.Security.Cryptography.Xml;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // -------------------------------------------------------------
 // 【追加その1】セッション用のサービスをシステムに登録します
 // -------------------------------------------------------------
@@ -17,7 +16,21 @@ builder.Services.AddSession(options =>
 
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(); // 普通の画面用
+// ★【追記】もし無ければ、すぐ下にこの1行を追加して丸写ししてください！
+builder.Services.AddControllers(); // ← これが [ApiController] を認識させるために必須です
+
+// ★★★【追記】この1行を丸写しで追加してください！ ★★★
+//------------------------------------------------------------------------------------------------------------------------//
+//詳細画面（Detail.cshtml）の最上部に書かれている @inject IHttpContextAccessor HttpContextAccessor という記述は、
+//「ASP.NET Coreのシステムよ、セッションを覗き見るための道具（IHttpContextAccessor）をここに注入してくれ！」という
+//DI（依存関係の注入）の命令です。
+//Program.cs 側に builder.Services.AddHttpContextAccessor(); を書き足してあげることで、
+//システムが「了解！いつでもその道具を貸し出せるように準備しておくね！」と登録を完了するため、
+//画面を開いた瞬間にエラーにならずバチッと連動するようになります。
+//------------------------------------------------------------------------------------------------------------------------//
+builder.Services.AddHttpContextAccessor();
+
 
 //------------------------------------------------------------------------------------------------------------------------//
 //【解説】builder.Services.AddControllersWithViews();とは？
@@ -103,6 +116,11 @@ app.UseSession();
 app.UseAuthorization();
 
 app.UseStaticFiles();    //app.MapStaticAssets();
+
+
+// ★【追記】app.MapControllerRoute(...) の「すぐ上」あたりにこの1行を追記して丸写ししてください！
+app.MapControllers(); // ← これが [Route("api/product")] の住所を開通させます
+
 
 // 🏠メニューバー「HOME」の処理
 app.MapControllerRoute(
