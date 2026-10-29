@@ -2,20 +2,13 @@
 FROM public.ecr.aws/sam/build-dotnet8:latest AS build-env
 WORKDIR /src
 
-# ソリューション内のすべてのプロジェクトファイル（.csproj, .vbproj）を階層構造を維持して一括コピー
-COPY CompanyOrgSystem.sln ./
-COPY *.slnx ./
-COPY CompanyOrgSystem/*.csproj ./CompanyOrgSystem/
-COPY ChatLogic/*.vbproj ./ChatLogic/
-COPY ProductService/*.vbproj ./ProductService/
-
-# 依存関係の復元
-RUN dotnet restore "CompanyOrgSystem/CompanyOrgSystem.csproj"
-
-# すべてのソースコードを一括でコピー
+# リポジトリのすべてのファイルを一括でDocker内にコピー（階層構造を100%維持）
 COPY . .
 
-# メインプロジェクトのビルドおよび発行（成果物を /app に出力）
+# 依存関係の復元（C#プロジェクトファイルを直接指定して復元します）
+RUN dotnet restore "CompanyOrgSystem/CompanyOrgSystem.csproj"
+
+# メインプロジェクトのフォルダに移動して、ビルド＆発行処理を実行
 WORKDIR /src/CompanyOrgSystem
 RUN dotnet publish CompanyOrgSystem.csproj -c Release -o /app -p:ErrorOnDuplicatePublishOutputFiles=false
 
