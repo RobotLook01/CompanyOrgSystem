@@ -6,16 +6,18 @@ WORKDIR /app
 COPY *.sln ./
 COPY *.slnx ./
 COPY *.csproj ./
-COPY ../ChatLogic/ChatLogic.vbproj /ChatLogic/
-COPY ../ProductService/ProductService.vbproj /ProductService/
+# ★修正：Dockerfileと同じ階層（または配下）にあるため、../ は不要です
+COPY ChatLogic/ChatLogic.vbproj ./ChatLogic/
+COPY ProductService/ProductService.vbproj ./ProductService/
 
 # C#のプロジェクトファイルを直接指定して依存関係を復元
 RUN dotnet restore CompanyOrgSystem.csproj
 
 # すべてのソースコード（C#）とお隣のソースコード（VB.NET）をまとめてコピー
 COPY . ./
-COPY ../ChatLogic/ /ChatLogic/
-COPY ../ProductService/ /ProductService/
+# ★修正：こちらも同様に ../ を削除し、Docker内の正しいパスへコピーします
+COPY ChatLogic/ ./ChatLogic/
+COPY ProductService/ ./ProductService/
 
 # 【超重要】重複ファイルによる衝突エラーを完全に無視する魔法のオプション（-p:ErrorOnDuplicatePublishOutputFiles=false）を追記
 RUN dotnet publish CompanyOrgSystem.csproj -c Release -o out -p:ErrorOnDuplicatePublishOutputFiles=false
