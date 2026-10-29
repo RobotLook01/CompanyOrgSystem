@@ -2,7 +2,6 @@
 
 @{
     bool isAdmin = ViewBag.IsAdmin ?? false;
-    //bool isKeyword = ViewBag.Keyword != null && !string.IsNullOrEmpty(ViewBag.Keyword.ToString());
     ViewData["Title"] = isAdmin ? "【管理者】社員検索" : "【一般】社員検索";
 }
 
@@ -21,10 +20,6 @@
     <form asp-controller="Home" asp-action="DoSearch" method="post" class="row g-3 my-4 bg-white p-3 border rounded shadow-sm">
         <input type="hidden" name="isAdmin" value="@isAdmin.ToString().ToLower()" />
         <div class="col-md-8">
-            <!--input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" required /-->
-            <!-- ⭕ 修正後：required を完全に削除する -->
-            <!--input type="text" name="keyword" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" /-->
-            <!--「もしnullなら空文字（""）にする」という安全な構文（ヌル合体演算子 ??）に書き換え-->
             <input type="text" name="keyword" value="@(ViewBag.Keyword ?? "")" class="form-control form-control-lg" placeholder="社員名を入力（例：鈴木）" />
         </div>
         <div class="col-md-4 d-flex align-items-end">
@@ -33,6 +28,7 @@
             </button>
         </div>
     </form>
+
     <!-- 💡 追加ポイント：管理者専用の組織図ツリー確認リンクボタン -->
     @if (isAdmin)
     {
@@ -43,13 +39,20 @@
             </a>
         </div>
     }
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <h4 class="fw-bold text-secondary">📋 検索結果一覧</h4>
-        <!-- ★ここを追加！ 検索一覧からチャットルームへ一瞬で移動できるボタンです -->
-        <a asp-controller="Home" asp-action="ChatRoom" class="btn btn-success fw-bold shadow-sm">
-            💬 開発チャットを開く
-        </a>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary fw-bold">◀ メニューに戻る</a>
+
+    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+        <h4 class="fw-bold text-secondary mb-0">📋 検索結果一覧</h4>
+        <div class="d-flex gap-2 flex-wrap">
+            <!-- ★【新設】ここにプログラム製品一覧（ポートフォリオ）へのリンクボタンを追加しました！ -->
+            <a asp-controller="Product" asp-action="Index" class="btn btn-primary fw-bold shadow-sm">
+                💻 製品ポートフォリオを開く
+            </a>
+            <!-- 検索一覧からチャットルームへ一瞬で移動できるボタン -->
+            <a asp-controller="Home" asp-action="ChatRoom" class="btn btn-success fw-bold shadow-sm">
+                💬 開発チャットを開く
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary fw-bold">◀ メニューに戻る</a>
+        </div>
     </div>
 
     <!-- 📊 グリッド（表） -->
