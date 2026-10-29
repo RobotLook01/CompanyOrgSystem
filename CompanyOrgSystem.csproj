@@ -35,6 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ChatLogic\ChatLogic.vbproj" />
+    <ProjectReference Include="..\ProductService\ProductService.vbproj" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" wwwroot_4lib_4jquery_4dist_4jquery_1min_1map__JsonSchema="https://www.schemastore.org/specif-1.1.json" wwwroot_4lib_4jquery_4dist_4jquery_1slim_1min_1map__JsonSchema="https://www.schemastore.org/sprite.json" /></VisualStudio></ProjectExtensions>
