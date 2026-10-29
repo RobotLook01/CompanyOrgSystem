@@ -7,6 +7,7 @@ WORKDIR /app/CompanyOrgSystem
 # プロジェクトの構成ファイルをそれぞれの正しいフォルダにコピー
 COPY CompanyOrgSystem.csproj ./
 COPY ../ChatLogic/ChatLogic.vbproj /app/ChatLogic/
+# ★大文字・小文字（ProductService）を完全に統一
 COPY ../ProductService/ProductService.vbproj /app/ProductService/
 
 # C#のプロジェクトファイルを直接指定して依存関係を復元
@@ -15,6 +16,7 @@ RUN dotnet restore CompanyOrgSystem.csproj
 # すべてのソースコードを、ローカルと同じ階層構造（並び順）になるようにコピー
 COPY . ./
 COPY ../ChatLogic/ /app/ChatLogic/
+# ★大文字・小文字（ProductService）を完全に統一
 COPY ../ProductService/ /app/ProductService/
 
 # 【超重要】重複ファイルによる衝突エラーを完全に無視する魔法のオプション（-p:ErrorOnDuplicatePublishOutputFiles=false）を追記
