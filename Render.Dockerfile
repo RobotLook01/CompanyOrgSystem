@@ -1,19 +1,25 @@
 # 1. ビルド用の環境（AWS公式パブリックレジストリから.NET 8.0 SDKを取得）
 FROM public.ecr.aws/sam/build-dotnet8:latest AS build-env
-
-# 💡 作業ディレクトリを /src に設定
 WORKDIR /src
 
-# リポジトリのすべてのファイルを /src 直下に一括コピー
+# ① まずすべてのファイルを一時的に /src にコピー
 COPY . .
 
-# 💡【重要】1つ深い階層にダミーの作業ディレクトリを作り、そこからビルドを実行します
-# これにより、.csproj から見て「1つ上の階層（/src）」に ChatLogic や ProductService が綺麗に並びます
-WORKDIR /src/app
+# ② 【超重要】メインプロジェクトのファイル群だけを、ローカルと100%同じ位置関係（1つ下のフォルダ）に移動・配置する
+RUN mkdir -p CompanyOrgSystem && \
+    mv Controllers CompanyOrgSystem/ 2>/dev/null || true && \
+    mv Views CompanyOrgSystem/ 2>/dev/null || true && \
+    mv Models CompanyOrgSystem/ 2>/dev/null || true && \
+    mv Program.cs CompanyOrgSystem/ 2>/dev/null || true && \
+    mv appsettings.json CompanyOrgSystem/ 2>/dev/null || true && \
+    mv CompanyOrgSystem.csproj CompanyOrgSystem/ 2>/dev/null || true
 
-# 1つ上の階層にあるプロジェクトファイルを明示的に指定して実行
-RUN dotnet restore "../CompanyOrgSystem.csproj"
-RUN dotnet publish "../CompanyOrgSystem.csproj" -c Release -o /app -p:ErrorOnDuplicatePublishOutputFiles=false
+# ③ メインプロジェクトのフォルダに移動してビルドを実行
+WORKDIR /src/CompanyOrgSystem
+
+# これにより、.csproj から見た「../ChatLogic」や「../ProductService」が物理的に100%成立します
+RUN dotnet restore "CompanyOrgSystem.csproj"
+RUN dotnet publish "CompanyOrgSystem.csproj" -c Release -o /app -p:ErrorOnDuplicatePublishOutputFiles=false
 
 # 2. 実行用の環境
 FROM public.ecr.aws/sam/build-dotnet8:latest
