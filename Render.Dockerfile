@@ -2,15 +2,14 @@
 FROM public.ecr.aws/sam/build-dotnet8:latest AS build-env
 WORKDIR /src
 
-# リポジトリのすべてのファイルを一括でDocker内にコピー（階層構造を100%維持）
+# リポジトリのすべてのファイルを一括でDocker内にコピー
 COPY . .
 
-# 依存関係の復元（C#プロジェクトファイルを直接指定して復元します）
-RUN dotnet restore "CompanyOrgSystem/CompanyOrgSystem.csproj"
+# 💡 修正：直下にあるプロジェクトファイルを指定して依存関係を復元
+RUN dotnet restore "CompanyOrgSystem.csproj"
 
-# メインプロジェクトのフォルダに移動して、ビルド＆発行処理を実行
-WORKDIR /src/CompanyOrgSystem
-RUN dotnet publish CompanyOrgSystem.csproj -c Release -o /app -p:ErrorOnDuplicatePublishOutputFiles=false
+# 💡 修正：現在のフォルダ（直下）のまま、ビルド＆発行処理を実行
+RUN dotnet publish "CompanyOrgSystem.csproj" -c Release -o /app -p:ErrorOnDuplicatePublishOutputFiles=false
 
 # 2. 実行用の環境
 FROM public.ecr.aws/sam/build-dotnet8:latest
