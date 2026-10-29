@@ -7,6 +7,7 @@ COPY *.sln ./
 COPY *.slnx ./
 COPY *.csproj ./
 COPY ../ChatLogic/ChatLogic.vbproj /ChatLogic/
+COPY ../ProductService/ProductService.vbproj /ProductService/
 
 # C#のプロジェクトファイルを直接指定して依存関係を復元
 RUN dotnet restore CompanyOrgSystem.csproj
@@ -14,6 +15,7 @@ RUN dotnet restore CompanyOrgSystem.csproj
 # すべてのソースコード（C#）とお隣のソースコード（VB.NET）をまとめてコピー
 COPY . ./
 COPY ../ChatLogic/ /ChatLogic/
+COPY ../ProductService/ /ProductService/
 
 # 【超重要】重複ファイルによる衝突エラーを完全に無視する魔法のオプション（-p:ErrorOnDuplicatePublishOutputFiles=false）を追記
 RUN dotnet publish CompanyOrgSystem.csproj -c Release -o out -p:ErrorOnDuplicatePublishOutputFiles=false
