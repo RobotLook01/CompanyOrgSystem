@@ -1,0 +1,186 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "製品詳細・バージョン履歴";
+    var productId = Context.Request.Query["id"].ToString();
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a href="/Product/Index?secret=@Context.Request.Query["secret"]" class="btn btn-sm btn-outline-secondary fw-bold shadow-sm">
+            ◀ 製品一覧に戻る
+        </a>
+    </div>
+
+    <!-- 1. ヘッダーエリア -->
+    <div class="card bg-light mb-4 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <span class="text-muted small">製品ID: <code>@productId</code></span>
+                <h3 class="fw-bold text-dark mb-0" id="txtProductName">プログラム詳細仕様</h3>
+            </div>
+            <div class="d-flex align-items-center mt-2 mt-md-0">
+                <label class="fw-bold me-2 text-nowrap" for="versionDropdown">Ver切り替え:</label>
+                <!-- ★ 手書きの選択肢（option）をすべて削除し、完全に空っぽ（動的配置用）にします -->
+                <select id="versionDropdown" class="form-select" onchange="loadVersionData()">
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 2. 左側：画面ハードコピー（スクショ）表示エリア -->
+        <div id="imageArea" class="col-md-5 text-center" style="display: none;">
+            <h5 class="fw-bold text-secondary mb-2">📷 動作画面（スクショ）</h5>
+            <div class="p-2 border rounded bg-white shadow-sm">
+                <img id="productImage" src="" alt="動作画面ハードコピー" class="img-fluid" style="max-height: 420px;" 
+                     onload="toggleImageArea(true)" onerror="toggleImageArea(false)" />
+            </div>
+        </div>
+
+        <!-- 3. 右側：可変明細（技術スタック・更新履歴）表示エリア -->
+        <div id="detailArea" class="col-md-12">
+            <h5 class="fw-bold text-secondary mb-2">📝 バージョン仕様・更新履歴</h5>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-bordered table-striped mb-0 align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 30%;" class="ps-3">項目・カテゴリ</th>
+                                <th>内容・変更点（可変明細）</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTableBody">
+                            <tr>
+                                <td colspan="2" class="text-center text-muted p-3">データを読み込み中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理者専用フォーム -->
+    @if (ViewBag.IsAdminMode == true)
+    {
+        <div class="mt-5 p-4 border border-danger bg-danger bg-opacity-10 rounded shadow-sm">
+            <h5 class="fw-bold text-danger mb-3">📸 【管理者限定】このバージョンの画面スクショを取り込む</h5>
+            <form asp-action="UploadImage" method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+                <input type="hidden" name="productId" value="@productId" />
+                <input type="hidden" name="versionNo" id="hiddenVersionNo" value="1" />
+                <input type="hidden" name="urlSecret" value="@Context.Request.Query["secret"]" />
+
+                <div class="col-md-8">
+                    <input class="form-control form-control-lg border-danger" type="file" id="imageFile" name="imageFile" accept="image/jpeg, image/png" required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold shadow" onclick="syncVersionBeforeUpload()">
+                        💾 ポスグレにスクショを保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const productId = "@productId";
+
+        // 画面を開いた瞬間に自動初期化
+        document.addEventListener("DOMContentLoaded", function () {
+            // ★【最優先】まずポスグレから動的にバージョン一覧を読み込んでコンボボックスを作ります！
+            loadDropdownDynamic();
+        });
+
+        // ★【新設】コンボボックス（ドロップダウン）を完全に動的に組み立てる関数
+        function loadDropdownDynamic() {
+            const dropdown = document.getElementById("versionDropdown");
+            
+            fetch(`/Product/GetVersions?id=${productId}`)
+                .then(response => response.json())
+                .then(versions => {
+                    dropdown.innerHTML = ""; // 初期化
+
+                    if (versions && versions.length > 0) {
+                        // ポスグレにあるレコードの数だけループして、動的にoptionを追加！
+                        versions.forEach(v => {
+                            const option = document.createElement("option");
+                            option.value = v.version_no;
+                            option.textContent = v.version_name;
+                            dropdown.appendChild(option);
+                        });
+                        
+                        // コンボボックスの組み立てが終わったら、最初のバージョンのデータを表示する
+                        loadVersionData();
+                    } else {
+                        dropdown.innerHTML = `<option value="0">バージョン未登録</option>`;
+                        document.getElementById("detailTableBody").innerHTML = `<tr><td colspan="2" class="text-center text-muted p-3">バージョン情報がありません。</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("コンボボックスの取得失敗:", error);
+                });
+        }
+
+        // ドロップダウン切り替え時に作動する大動脈関数（英語カラム完全適合版）
+        function loadVersionData() {
+            const selectedVersion = document.getElementById("versionDropdown").value;
+            if(selectedVersion === "0") return;
+
+            const imgTag = document.getElementById("productImage");
+            imgTag.src = `/Product/GetImage?id=${productId}&version=${selectedVersion}`;
+
+            const tbody = document.getElementById("detailTableBody");
+            
+            fetch(`/Product/GetDetails?id=${productId}&version=${selectedVersion}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('通信エラー');
+                    return response.json();
+                })
+                .then(data => {
+                    tbody.innerHTML = "";
+                    if (data && data.length > 0) {
+                        data.forEach(row => {
+                            const key = row.detail_key;
+                            const val = row.detail_value;
+                            const tr = document.createElement("tr");
+                            tr.innerHTML = `<td class="ps-3"><strong>${escapeHtml(key)}</strong></td><td>${escapeHtml(val)}</td>`;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted p-3">このバージョンの詳細・更新履歴データはありません。</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("明細の取得失敗:", error);
+                    tbody.innerHTML = `<tr><td colspan="2" class="text-danger text-center p-3">データの読み込みに失敗しました。</td></tr>`;
+                });
+        }
+
+        function toggleImageArea(hasImage) {
+            const imageArea = document.getElementById("imageArea");
+            const detailArea = document.getElementById("detailArea");
+            if (hasImage) {
+                imageArea.style.display = "block";
+                detailArea.className = "col-md-7";
+            } else {
+                imageArea.style.display = "none";
+                detailArea.className = "col-md-12";
+            }
+        }
+
+        function syncVersionBeforeUpload() {
+            const currentVer = document.getElementById("versionDropdown").value;
+            document.getElementById("hiddenVersionNo").value = currentVer;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+}

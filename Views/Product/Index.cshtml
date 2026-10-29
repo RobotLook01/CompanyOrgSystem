@@ -1,0 +1,91 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "自作プログラム製品一覧";
+}
+
+<div class="container mt-4">
+    <!-- 上部ヘッダーとナビゲーションボタン -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="fw-bold text-primary mb-0">💻 開発プログラム・ポートフォリオ</h2>
+        <div class="d-flex gap-2">
+            <!-- ★チャット画面のボタンと100%同じ書き方に統一した「メニューに戻る」ボタン -->
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary fw-bold shadow-sm">
+                ◀ メニューに戻る
+            </a>
+        </div>
+    </div>
+
+    <!-- 製品一覧テーブルを表示するカード部品 -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 20%;" class="ps-3">製品ID</th>
+                        <th>プログラム・作品名</th>
+                        <th style="width: 20%;" class="text-center">管理バージョン数</th>
+                        <th style="width: 15%;" class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="productListBody">
+                    <tr>
+                        <td colspan="4" class="text-center text-muted p-4">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            製品データを読み込み中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // C#のProductController内にある GetList 窓口を呼び出す
+        fetch('/Product/GetList')
+            .then(response => {
+                if (!response.ok) throw new Error('サーバーエラーが発生しました。');
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.getElementById("productListBody");
+                tbody.innerHTML = "";
+
+                if (data && data.length > 0) {
+                    data.forEach(row => {
+                        // ポスグレから返ってくる英小文字のキー名をダイレクトに取得！
+                        const prodId = row.product_id;
+                        const prodName = row.product_name;
+                        const vCount = row.version_count;
+
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td class="ps-3"><code>${prodId}</code></td>
+                            <td class="fw-bold text-secondary">${prodName}</td>
+                            <td class="text-center">
+                                <span class="badge ${vCount > 0 ? 'bg-success' : 'bg-secondary'}">
+                                    ${vCount} つの仕様・履歴
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <!-- クエリ文字列「?id=PROG-001」形式で詳細画面へ遷移 -->
+                                <a href="/Product/Detail?id=${prodId}" class="btn btn-sm btn-primary">
+                                    🔍 詳細・履歴
+                                </a>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted p-4">登録されているプログラム製品がありません。</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error("一覧の取得に失敗:", error);
+                document.getElementById("productListBody").innerHTML =
+                    `<tr><td colspan="4" class="text-danger text-center p-4">データの読み込みに失敗しました。</td></tr>`;
+            });
+    });
+</script>
