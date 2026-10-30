@@ -66,6 +66,21 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
+// 💡 必ずパイプラインの「一番最初」にこれを滑り込ませます！
+app.UseForwardedHeaders();
+
+// 既存のコード（環境チェックなど）
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection(); // 💡 これが動く前に上のUseForwardedHeadersがポートを解決してくれます
+app.UseStaticFiles();
+app.UseRouting();
+
+
 //----------------------------------------------------------------------------------------------------------------//
 //【解説】開発環境と本番環境の切り替えについて
 //
