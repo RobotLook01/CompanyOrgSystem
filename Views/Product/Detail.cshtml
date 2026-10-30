@@ -111,24 +111,55 @@
         });
 
         // ★【新設】コンボボックス（ドロップダウン）を完全に動的に組み立てる関数
+        // function loadDropdownDynamic() {
+        //     const dropdown = document.getElementById("versionDropdown");
+            
+        //     fetch(`/Product/GetVersions?id=${productId}`)
+        //         .then(response => response.json())
+        //         .then(versions => {
+        //             dropdown.innerHTML = ""; // 初期化
+
+        //             if (versions && versions.length > 0) {
+        //                 // ポスグレにあるレコードの数だけループして、動的にoptionを追加！
+        //                 versions.forEach(v => {
+        //                     const option = document.createElement("option");
+        //                     option.value = v.version_no;
+        //                     option.textContent = v.version_name;
+        //                     dropdown.appendChild(option);
+        //                 });
+                        
+        //                 // コンボボックスの組み立てが終わったら、最初のバージョンのデータを表示する
+        //                 loadVersionData();
+        //             } else {
+        //                 dropdown.innerHTML = `<option value="0">バージョン未登録</option>`;
+        //                 document.getElementById("detailTableBody").innerHTML = `<tr><td colspan="2" class="text-center text-muted p-3">バージョン情報がありません。</td></tr>`;
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error("コンボボックスの取得失敗:", error);
+        //         });
+        // }
+
         function loadDropdownDynamic() {
             const dropdown = document.getElementById("versionDropdown");
-            
+
             fetch(`/Product/GetVersions?id=${productId}`)
                 .then(response => response.json())
                 .then(versions => {
-                    dropdown.innerHTML = ""; // 初期化
+                    dropdown.innerHTML = "";
 
                     if (versions && versions.length > 0) {
-                        // ポスグレにあるレコードの数だけループして、動的にoptionを追加！
                         versions.forEach(v => {
                             const option = document.createElement("option");
                             option.value = v.version_no;
                             option.textContent = v.version_name;
                             dropdown.appendChild(option);
                         });
-                        
-                        // コンボボックスの組み立てが終わったら、最初のバージョンのデータを表示する
+
+                        // 💡【追記】コンボボックスの最初の選択肢（0番目）を明示的に選択状態にします
+                        dropdown.selectedIndex = 0;
+
+                        // その上で、満を持してバージョンデータをロードする
                         loadVersionData();
                     } else {
                         dropdown.innerHTML = `<option value="0">バージョン未登録</option>`;
@@ -139,6 +170,7 @@
                     console.error("コンボボックスの取得失敗:", error);
                 });
         }
+
 
         // // ドロップダウン切り替え時に作動する大動脈関数（英語カラム完全適合版）
         // function loadVersionData() {
@@ -305,29 +337,47 @@
         }
 
 
+        // function toggleImageArea(hasImage) {
+        //     const imageArea = document.getElementById("imageArea");
+        //     const detailArea = document.getElementById("detailArea");
+        //     // if (hasImage) {
+        //     //     imageArea.style.display = "block";
+        //     //     detailArea.className = "col-md-7";
+        //     // } else {
+        //     //     imageArea.style.display = "none";
+        //     //     detailArea.className = "col-md-12";
+        //     // }
+        //     if (hasImage) {
+        //         imageArea.style.display = "block";
+        //         // ★スマホでは横幅100%（col-12）、PCでは横並び（col-md-5）を維持する魔法の併記
+        //         imageArea.className = "col-12 col-md-5 text-center";
+        //         // ★明細側も同様に、スマホではcol-12、PCではcol-md-7にします
+        //         detailArea.className = "col-12 col-md-7";
+        //     } else {
+        //         imageArea.style.display = "none";
+        //         // 画像がない場合は、画面いっぱいに広げます
+        //         detailArea.className = "col-12";
+        //     }
+        // }
+
         function toggleImageArea(hasImage) {
+            const imgTag = document.getElementById("productImage");
             const imageArea = document.getElementById("imageArea");
             const detailArea = document.getElementById("detailArea");
-            // if (hasImage) {
-            //     imageArea.style.display = "block";
-            //     detailArea.className = "col-md-7";
-            // } else {
-            //     imageArea.style.display = "none";
-            //     detailArea.className = "col-md-12";
-            // }
+
+            if (imgTag && imgTag.src.startsWith("data:image")) return;
+
             if (hasImage) {
                 imageArea.style.display = "block";
-                // ★スマホでは横幅100%（col-12）、PCでは横並び（col-md-5）を維持する魔法の併記
-                imageArea.className = "col-12 col-md-5 text-center";
-                // ★明細側も同様に、スマホではcol-12、PCではcol-md-7にします
-                detailArea.className = "col-12 col-md-7";
+                // 💡【修正】「-md-」を抜くことで、スマホの画面幅でも絶対に2カラム（横並び）を強制します！
+                imageArea.className = "col-5 text-center";
+                detailArea.className = "col-7";
             } else {
                 imageArea.style.display = "none";
-                // 画像がない場合は、画面いっぱいに広げます
                 detailArea.className = "col-12";
             }
-
         }
+
 
         function syncVersionBeforeUpload() {
             const currentVer = document.getElementById("versionDropdown").value;
