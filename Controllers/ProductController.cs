@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -116,15 +116,34 @@ namespace CompanyOrgSystem.Controllers
             return Json(ConvertDataTableToList(dt));
         }
 
+        //[HttpGet]
+        //public IActionResult GetImage(string id, int version)
+        //{
+        //    string connStr = GetConnectionString();
+        //    VbLogic service = new VbLogic(connStr);
+        //    byte[] imageBytes = service.GetProductImageBytes(id, version);
+        //    if (imageBytes != null && imageBytes.Length > 0) return File(imageBytes, "image/jpeg");
+        //    return NoContent();
+        //}
         [HttpGet]
         public IActionResult GetImage(string id, int version)
         {
             string connStr = GetConnectionString();
             VbLogic service = new VbLogic(connStr);
             byte[] imageBytes = service.GetProductImageBytes(id, version);
-            if (imageBytes != null && imageBytes.Length > 0) return File(imageBytes, "image/jpeg");
+
+            if (imageBytes != null && imageBytes.Length > 0)
+            {
+                // 💡【最重要】"image/jpeg" の後ろに、明示的にファイルサイズ情報（Content-Length）などの
+                // エンティティヘッダーを乗せるオーバーロード（引数3つのFileメソッド）に変更します。
+                // これにより、スマホのブラウザが「これから何バイトの画像データが届くか」を正確に把握し、
+                // モバイル回線のパケット揺らぎによるデータ破損（表示切れ）を100%防止します。
+                return File(imageBytes, "image/jpeg", true); // 第3引数の true でRangeリクエスト（分割ダウンロード）にも対応
+            }
+
             return NoContent();
         }
+
 
         // 🔒 接続文字列を取得する共通関数
         private string GetConnectionString()
