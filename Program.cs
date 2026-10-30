@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Security.Cryptography.Xml;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -49,6 +50,19 @@ builder.Services.AddHttpContextAccessor();
 //	　• 画面のフォームから送信されてきたデータを、C#のクラス（Model）に自動で変換したり、入力チェック（必須チェックなど）を
 //	  　行ったりする裏方の機能です。
 //------------------------------------------------------------------------------------------------------------------------//
+
+using Microsoft.AspNetCore.HttpOverrides; // 💡 先頭にこのusingを追加
+
+var builder = WebApplication.CreateBuilder(args);
+
+// --- 💡 builder.Build() の手前に以下の設定を追加 ---
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // クラウド環境（Render等）ではプロキシのIPが動的に変わるため、安全のために制限をクリアします
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 var app = builder.Build();
 
