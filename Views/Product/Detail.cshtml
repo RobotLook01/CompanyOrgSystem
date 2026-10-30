@@ -35,7 +35,11 @@
         <div id="imageArea" class="col-md-5 text-center" style="display: none;">
             <h5 class="fw-bold text-secondary mb-2">📷 動作画面（スクショ）</h5>
             <div class="p-2 border rounded bg-white shadow-sm">
-                <img id="productImage" src="" alt="動作画面ハードコピー" class="img-fluid" style="max-height: 420px;" 
+                <!--img id="productImage" src="" alt="動作画面ハードコピー" class="img-fluid" style="max-height: 420px;" 
+                     onload="toggleImageArea(true)" onerror="toggleImageArea(false)" /-->
+                <!-- srcに透明な1マスの画像を初期値として入れておくことで、スマホの先走りエラーを完全に防ぎます -->
+                <img id="productImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                     alt="動作画面ハードコピー" class="img-fluid" style="max-height: 420px;"
                      onload="toggleImageArea(true)" onerror="toggleImageArea(false)" />
             </div>
         </div>
