@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
@@ -166,13 +166,25 @@
         function toggleImageArea(hasImage) {
             const imageArea = document.getElementById("imageArea");
             const detailArea = document.getElementById("detailArea");
+            // if (hasImage) {
+            //     imageArea.style.display = "block";
+            //     detailArea.className = "col-md-7";
+            // } else {
+            //     imageArea.style.display = "none";
+            //     detailArea.className = "col-md-12";
+            // }
             if (hasImage) {
                 imageArea.style.display = "block";
-                detailArea.className = "col-md-7";
+                // ★スマホでは横幅100%（col-12）、PCでは横並び（col-md-5）を維持する魔法の併記
+                imageArea.className = "col-12 col-md-5 text-center";
+                // ★明細側も同様に、スマホではcol-12、PCではcol-md-7にします
+                detailArea.className = "col-12 col-md-7";
             } else {
                 imageArea.style.display = "none";
-                detailArea.className = "col-md-12";
+                // 画像がない場合は、画面いっぱいに広げます
+                detailArea.className = "col-12";
             }
+
         }
 
         function syncVersionBeforeUpload() {
