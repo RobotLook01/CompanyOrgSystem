@@ -132,8 +132,10 @@
             if(selectedVersion === "0") return;
 
             const imgTag = document.getElementById("productImage");
+            // 末尾に new Date().getTime() を足すことで、スマホのブラウザに「毎回違う新しい画像だよ！」と錯覚させ、キャッシュを強制的に破壊します
+            imgTag.src = window.location.origin + `/Product/GetImage?id=${productId}&version=${selectedVersion}&_=` + new Date().getTime();
             // 現在のドメイン（https://...）を先頭に明示的に合流させることで、スマホのセキュリティブロックを完全に回避します
-            imgTag.src = window.location.origin + `/Product/GetImage?id=${productId}&version=${selectedVersion}`;
+            // imgTag.src = window.location.origin + `/Product/GetImage?id=${productId}&version=${selectedVersion}`;
             //imgTag.src = `/Product/GetImage?id=${productId}&version=${selectedVersion}`;
 
             const tbody = document.getElementById("detailTableBody");
