@@ -5,19 +5,22 @@ WORKDIR /src
 # ① まずすべてのファイルを一時的に /src にコピー
 COPY . .
 
-# ② 【超重要】メインプロジェクトのファイル群だけを、ローカルと100%同じ位置関係（1つ下のフォルダ）に移動・配置する
+# ② 【超重要・完全版】wwwrootやPropertiesも含め、メインプロジェクトの資材をすべてフォルダ内に移動する
 RUN mkdir -p CompanyOrgSystem && \
     mv Controllers CompanyOrgSystem/ 2>/dev/null || true && \
     mv Views CompanyOrgSystem/ 2>/dev/null || true && \
     mv Models CompanyOrgSystem/ 2>/dev/null || true && \
+    mv wwwroot CompanyOrgSystem/ 2>/dev/null || true && \
+    mv Properties CompanyOrgSystem/ 2>/dev/null || true && \
     mv Program.cs CompanyOrgSystem/ 2>/dev/null || true && \
     mv appsettings.json CompanyOrgSystem/ 2>/dev/null || true && \
+    mv libman.json CompanyOrgSystem/ 2>/dev/null || true && \
     mv CompanyOrgSystem.csproj CompanyOrgSystem/ 2>/dev/null || true
 
 # ③ メインプロジェクトのフォルダに移動してビルドを実行
 WORKDIR /src/CompanyOrgSystem
 
-# これにより、.csproj から見た「../ChatLogic」や「../ProductService」が物理的に100%成立します
+# これにより、.csproj から見た「../ChatLogic」が物理的に100%成立します
 RUN dotnet restore "CompanyOrgSystem.csproj"
 RUN dotnet publish "CompanyOrgSystem.csproj" -c Release -o /app -p:ErrorOnDuplicatePublishOutputFiles=false
 
