@@ -32,7 +32,7 @@
 
     <div class="row">
         <!-- 2. 左側：画面ハードコピー（スクショ）表示エリア -->
-        <div id="imageArea" class="col-md-5 text-center" style="display: none;">
+        @*<div id="imageArea" class="col-md-5 text-center" style="display: none;">
             <h5 class="fw-bold text-secondary mb-2">📷 動作画面（スクショ）</h5>
             <div class="p-2 border rounded bg-white shadow-sm">
                 <!--img id="productImage" src="" alt="動作画面ハードコピー" class="img-fluid" style="max-height: 420px;" 
@@ -41,6 +41,16 @@
                 <img id="productImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                      alt="動作画面ハードコピー" class="img-fluid" style="max-height: 420px;"
                      onload="toggleImageArea(true)" onerror="toggleImageArea(false)" />
+            </div>
+        </div> *@
+        <!-- 📄 2. 左側：画面ハードコピー（スクショ）表示エリア -->
+        <!-- 💡 初期状態は display: none; のままでOKです -->
+        <div id="imageArea" class="col-md-5 text-center" style="display: none;">
+            <h5 class="fw-bold text-secondary mb-2">📷 動作画面（スクショ）</h5>
+            <div class="p-2 border rounded bg-white shadow-sm">
+                <!-- ❌ onerror と onload をここから完全に撤去します！ -->
+                <!-- 💡 代わりに、画像が届く直前のチラつきを防ぐため、最初は不透明度0（見えない状態）にしておきます -->
+                <img id="productImage" src="" alt="動作画面ハードコピー" class="img-fluid" style="max-height: 420px; opacity: 0; transition: opacity 0.2s;" />
             </div>
         </div>
 
@@ -170,19 +180,83 @@
         // }
 
 
-        // ドロップダウン切り替え時に作動する大動脈関数（スマホ完全対応版）
+        // // ドロップダウン切り替え時に作動する大動脈関数（スマホ完全対応版）
+        // function loadVersionData() {
+        //     const selectedVersion = document.getElementById("versionDropdown").value;
+        //     if(selectedVersion === "0") return;
+
+        //     const imgTag = document.getElementById("productImage");
+
+        //     // ❌ 誤爆の原因となる window.location.origin を削除し、相対パスにします。
+        //     // これにより、スマホのHTTPS通信制限（Mixed Content）を完全に回避します。
+        //     imgTag.src = `/Product/GetImage?id=${productId}&version=${selectedVersion}&_=` + new Date().getTime();
+
+        //     const tbody = document.getElementById("detailTableBody");
+
+        //     fetch(`/Product/GetDetails?id=${productId}&version=${selectedVersion}`)
+        //         .then(response => {
+        //             if (!response.ok) throw new Error('通信エラー');
+        //             return response.json();
+        //         })
+        //         .then(data => {
+        //             tbody.innerHTML = "";
+        //             if (data && data.length > 0) {
+        //                 data.forEach(row => {
+        //                     const key = row.detail_key;
+        //                     const val = row.detail_value;
+        //                     const tr = document.createElement("tr");
+        //                     tr.innerHTML = `<td class="ps-3"><strong>${escapeHtml(key)}</strong></td><td>${escapeHtml(val)}</td>`;
+        //                     tbody.appendChild(tr);
+        //                 });
+        //             } else {
+        //                 tbody.innerHTML = `<tr><td colspan="2" class="text-center text-muted p-3">このバージョンの詳細・更新履歴データはありません。</td></tr>`;
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error("明細の取得失敗:", error);
+        //             tbody.innerHTML = `<tr><td colspan="2" class="text-danger text-center p-3">データの読み込みに失敗しました。</td></tr>`;
+        //         });
+        // }
+
+        // ドロップダウン切り替え時に作動する大動脈関数（スマホ同期バグ完全克服版）
         function loadVersionData() {
             const selectedVersion = document.getElementById("versionDropdown").value;
             if(selectedVersion === "0") return;
 
             const imgTag = document.getElementById("productImage");
+            const imageArea = document.getElementById("imageArea");
+            const detailArea = document.getElementById("detailArea");
 
-            // ❌ 誤爆の原因となる window.location.origin を削除し、相対パスにします。
-            // これにより、スマホのHTTPS通信制限（Mixed Content）を完全に回避します。
+            // 💡【重要】新しく画像を読み込む前に、一旦エリアを完全に初期化（非表示）にします
+            // これにより、前のバージョンの画像が残って表示されるのを防ぎます
+            imageArea.style.display = "none";
+            imgTag.style.opacity = "0";
+            detailArea.className = "col-12"; // 明細を一旦横幅いっぱいに広げる
+
+            // 💡 ポスグレから画像が「正常に届き終わった瞬間」にだけ作動するイベントをC#側（JavaScript）で手動セット
+            imgTag.onload = function() {
+                // 画像が届いたら、スマホ・PCそれぞれのレイアウトでエリアを表示！
+                imageArea.style.display = "block";
+                imageArea.className = "col-12 col-md-5 text-center";
+                detailArea.className = "col-12 col-md-7";
+
+                // 画像をふわっと表示させる（スマホの画面ガタつき防止）
+                imgTag.style.opacity = "1";
+            };
+
+            // 💡 画像取得で本当のエラー（404や500エラー）が起きた時だけ作動するイベント
+            imgTag.onerror = function() {
+                // 完全に失敗した時は、エリアを消して明細を広げる（安全弁）
+                imageArea.style.display = "none";
+                detailArea.className = "col-12";
+                console.warn("このバージョンにはスクショ画像が登録されていません。");
+            };
+
+            // 💡 準備が整ってから、満を持してポスグレの画像URLを代入（リクエスト開始）
             imgTag.src = `/Product/GetImage?id=${productId}&version=${selectedVersion}&_=` + new Date().getTime();
 
+            // --- 明細テーブルのFetch処理（ここは変更なし） ---
             const tbody = document.getElementById("detailTableBody");
-
             fetch(`/Product/GetDetails?id=${productId}&version=${selectedVersion}`)
                 .then(response => {
                     if (!response.ok) throw new Error('通信エラー');
@@ -207,6 +281,7 @@
                     tbody.innerHTML = `<tr><td colspan="2" class="text-danger text-center p-3">データの読み込みに失敗しました。</td></tr>`;
                 });
         }
+
 
         // スマホ特有の先走り onerror 誤爆を完全に防止するガード処理
         function toggleImageArea(hasImage) {
