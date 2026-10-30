@@ -132,7 +132,9 @@
             if(selectedVersion === "0") return;
 
             const imgTag = document.getElementById("productImage");
-            imgTag.src = `/Product/GetImage?id=${productId}&version=${selectedVersion}`;
+            // 現在のドメイン（https://...）を先頭に明示的に合流させることで、スマホのセキュリティブロックを完全に回避します
+            imgTag.src = window.location.origin + `/Product/GetImage?id=${productId}&version=${selectedVersion}`;
+            //imgTag.src = `/Product/GetImage?id=${productId}&version=${selectedVersion}`;
 
             const tbody = document.getElementById("detailTableBody");
             
