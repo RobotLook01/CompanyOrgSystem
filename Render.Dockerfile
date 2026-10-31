@@ -22,13 +22,16 @@ RUN dotnet publish "CompanyOrgSystem.csproj" -c Release -o /app -p:ErrorOnDuplic
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# 💡【追記】ポスグレ接続（Npgsql）に必要なKerberos/GSSAPIシステムライブラリをコンテナへ追加します
 USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libgssapi-krb5-2 && \
     rm -rf /var/lib/apt/lists/*
 
+# 1. 最初に publish された資材一式をコピー
 COPY --from=build-env /app .
+
+# 🌟【最重要・追記】置き去りにされていた wwwroot フォルダを、実行環境の /app/wwwroot へ物理的にコピーします！
+COPY --from=build-env /src/CompanyOrgSystem/wwwroot ./wwwroot
 
 ENV ASPNETCORE_URLS=http://+:10000
 ENTRYPOINT ["dotnet", "CompanyOrgSystem.dll"]
