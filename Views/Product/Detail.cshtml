@@ -277,11 +277,18 @@
             };
 
             // 💡 画像取得で本当のエラー（404や500エラー）が起きた時だけ作動するイベント
+            // imgTag.onerror = function() {
+            //     // 完全に失敗した時は、エリアを消して明細を広げる（安全弁）
+            //     imageArea.style.display = "none";
+            //     detailArea.className = "col-12";
+            //     console.warn("このバージョンにはスクショ画像が登録されていません。");
+            // };
+
+            // 💡【実験用】エラーが起きてもエリアを絶対に消さないように、中身をコメントアウトします★★★
             imgTag.onerror = function() {
-                // 完全に失敗した時は、エリアを消して明細を広げる（安全弁）
-                imageArea.style.display = "none";
-                detailArea.className = "col-12";
-                console.warn("このバージョンにはスクショ画像が登録されていません。");
+                // imageArea.style.display = "none";
+                // detailArea.className = "col-12";
+                console.warn("スマホでエラーイベントが発生しました");
             };
 
             // 💡 準備が整ってから、満を持してポスグレの画像URLを代入（リクエスト開始）
