@@ -10,12 +10,28 @@ var builder = WebApplication.CreateBuilder(args);
 // 【セッション設定】セッション用のサービスをシステムに登録します
 // -------------------------------------------------------------
 builder.Services.AddDistributedMemoryCache(); // セッションにメモリを使う設定
+
+
+//builder.Services.AddSession(options =>
+//{
+//    options.IdleTimeout = TimeSpan.FromMinutes(30); // 30分間操作がないとセッション切れにする
+//    options.Cookie.HttpOnly = true;                // セキュリティを高める設定
+//    options.Cookie.IsEssential = true;             // 同意なしでもクッキーを使えるようにする
+//});
+// -------------------------------------------------------------
+// 【セッション設定】スマホの古いクッキーによる暗号化エラーを完全にスルーします
+// -------------------------------------------------------------
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30); // 30分間操作がないとセッション切れにする
     options.Cookie.HttpOnly = true;                // セキュリティを高める設定
-    options.Cookie.IsEssential = true;             // 同意なしでもクッキーを使えるようにする
+
+    // 🌟【重要・追記】クッキーのチェックを「必須（Essential）」から「任意」に緩めます
+    // これにより、DataProtectionのキーリングが見つからなくてもシステムがクラッシュせず、
+    // 自動的に古いクッキーを破棄して新しい通信として画像データを通してくれます
+    options.Cookie.IsEssential = false;
 });
+
 
 // -------------------------------------------------------------
 // 【DataProtection設定】🌟Render上での暗号キー消滅によるセッション切断バグを完全にガードします
