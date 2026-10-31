@@ -21,26 +21,41 @@ builder.Services.AddDistributedMemoryCache(); // セッションにメモリを�
 // -------------------------------------------------------------
 // 【セッション設定】スマホの古いクッキーによる暗号化エラーを完全にスルーします
 // -------------------------------------------------------------
+//builder.Services.AddSession(options =>
+//{
+//    options.IdleTimeout = TimeSpan.FromMinutes(30); // 30分間操作がないとセッション切れにする
+//    options.Cookie.HttpOnly = true;                // セキュリティを高める設定
+
+//    // 🌟【重要・追記】クッキーのチェックを「必須（Essential）」から「任意」に緩めます
+//    // これにより、DataProtectionのキーリングが見つからなくてもシステムがクラッシュせず、
+//    // 自動的に古いクッキーを破棄して新しい通信として画像データを通してくれます
+//    options.Cookie.IsEssential = false;
+//});
+
+
+// ⭕️ エラーの起きない標準的で最も頑丈な設定に修正します
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // 30分間操作がないとセッション切れにする
-    options.Cookie.HttpOnly = true;                // セキュリティを高める設定
-
-    // 🌟【重要・追記】クッキーのチェックを「必須（Essential）」から「任意」に緩めます
-    // これにより、DataProtectionのキーリングが見つからなくてもシステムがクラッシュせず、
-    // 自動的に古いクッキーを破棄して新しい通信として画像データを通してくれます
-    options.Cookie.IsEssential = false;
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true; // 必須（標準値）に戻します
 });
 
 
 // -------------------------------------------------------------
 // 【DataProtection設定】🌟Render上での暗号キー消滅によるセッション切断バグを完全にガードします
 // -------------------------------------------------------------
-builder.Services.AddDataProtection()
-    // コンテナが再起動・スリープから復帰しても暗号キーが壊れないように、一時フォルダ（/tmp）へ永続化パスを指定します
-    .PersistKeysToFileSystem(new DirectoryInfo(@"/tmp/DataProtection-Keys"))
-    // アプリの識別名を明確にして、PCとスマホの間で暗号化セッションがズレるのを防ぎます
-    .SetApplicationName("CompanyOrgSystem");
+//builder.Services.AddDataProtection()
+//    // コンテナが再起動・スリープから復帰しても暗号キーが壊れないように、一時フォルダ（/tmp）へ永続化パスを指定します
+//    .PersistKeysToFileSystem(new DirectoryInfo(@"/tmp/DataProtection-Keys"))
+//    // アプリの識別名を明確にして、PCとスマホの間で暗号化セッションがズレるのを防ぎます
+//    .SetApplicationName("CompanyOrgSystem");
+
+//// ❌ 以下のコードがサーバー内部エラーを引き起こしているため、丸ごと削除します
+//builder.Services.AddDataProtection()
+//    .PersistKeysToFileSystem(new DirectoryInfo(@"/tmp/DataProtection-Keys"))
+//    .SetApplicationName("CompanyOrgSystem");
+
 
 // -------------------------------------------------------------
 // 【サービス登録】各種コントローラーや便利な道具（DI）を登録します
