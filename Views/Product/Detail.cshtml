@@ -140,6 +140,38 @@
         //         });
         // }
 
+        // function loadDropdownDynamic() {
+        //     const dropdown = document.getElementById("versionDropdown");
+
+        //     fetch(`/Product/GetVersions?id=${productId}`)
+        //         .then(response => response.json())
+        //         .then(versions => {
+        //             dropdown.innerHTML = "";
+
+        //             if (versions && versions.length > 0) {
+        //                 versions.forEach(v => {
+        //                     const option = document.createElement("option");
+        //                     option.value = v.version_no;
+        //                     option.textContent = v.version_name;
+        //                     dropdown.appendChild(option);
+        //                 });
+
+        //                 // 💡【追記】コンボボックスの最初の選択肢（0番目）を明示的に選択状態にします
+        //                 dropdown.selectedIndex = 0;
+
+        //                 // その上で、満を持してバージョンデータをロードする
+        //                 loadVersionData();
+        //             } else {
+        //                 dropdown.innerHTML = `<option value="0">バージョン未登録</option>`;
+        //                 document.getElementById("detailTableBody").innerHTML = `<tr><td colspan="2" class="text-center text-muted p-3">バージョン情報がありません。</td></tr>`;
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error("コンボボックスの取得失敗:", error);
+        //         });
+        // }
+
+
         function loadDropdownDynamic() {
             const dropdown = document.getElementById("versionDropdown");
 
@@ -156,10 +188,14 @@
                             dropdown.appendChild(option);
                         });
 
-                        // 💡【追記】コンボボックスの最初の選択肢（0番目）を明示的に選択状態にします
+                        // 💡【重要・修正】最初の選択肢（0番目）を明示的に指定します
                         dropdown.selectedIndex = 0;
 
-                        // その上で、満を持してバージョンデータをロードする
+                        // 💡【最重要・追記】スマホのブラウザに、選択値が変更されたことを物理的に通知（イベント発火）します
+                        // これにより、スマホのChromeが「値が空だ」と勘違いするバグを100%防止します
+                        dropdown.dispatchEvent(new Event('change'));
+
+                        // 満を持してデータをロード
                         loadVersionData();
                     } else {
                         dropdown.innerHTML = `<option value="0">バージョン未登録</option>`;
@@ -170,6 +206,7 @@
                     console.error("コンボボックスの取得失敗:", error);
                 });
         }
+
 
 
         // // ドロップダウン切り替え時に作動する大動脈関数（英語カラム完全適合版）
