@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.DataProtection; // 💡【最上部に追加】DataProtection の名前空間を追加
 using System.Security.Cryptography.Xml;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -15,6 +16,15 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;                // セキュリティを高める設定
     options.Cookie.IsEssential = true;             // 同意なしでもクッキーを使えるようにする
 });
+
+// -------------------------------------------------------------
+// 【DataProtection設定】🌟Render上での暗号キー消滅によるセッション切断バグを完全にガードします
+// -------------------------------------------------------------
+builder.Services.AddDataProtection()
+    // コンテナが再起動・スリープから復帰しても暗号キーが壊れないように、一時フォルダ（/tmp）へ永続化パスを指定します
+    .PersistKeysToFileSystem(new DirectoryInfo(@"/tmp/DataProtection-Keys"))
+    // アプリの識別名を明確にして、PCとスマホの間で暗号化セッションがズレるのを防ぎます
+    .SetApplicationName("CompanyOrgSystem");
 
 // -------------------------------------------------------------
 // 【サービス登録】各種コントローラーや便利な道具（DI）を登録します
