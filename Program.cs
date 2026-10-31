@@ -125,4 +125,20 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // アプリの実行開始！
-app.Run();
+//app.Run();
+
+// --- 💡 最下部の app.Run(); を以下のように書き換えて、原因をコンソールに強制出力させます ---
+try
+{
+    Console.WriteLine("=== Webアプリケーションの起動を試みます ===");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("==================================================");
+    Console.WriteLine($"🚨 アプリケーション起動中に致命的な例外が発生しました: {ex.Message}");
+    Console.WriteLine($"詳細なスタックトレース: {ex.StackTrace}");
+    Console.WriteLine("==================================================");
+    throw;
+}
+
